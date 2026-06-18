@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "gdUnit4: run all tests",
+      "type": "process",
+      "command": "${workspaceFolder}/addons/gdUnit4/runtest.cmd",
+      "args": [
+        "--godot_binary",
+        "C:\\Users\\User\\Programs\\Godot_v4.6.33\\Godot_v4.6.3-stable_win64_console.exe",
+        "-a",
+        "res://tests"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "gdUnit4: run current test file",
+      "type": "process",
+      "command": "${workspaceFolder}/addons/gdUnit4/runtest.cmd",
+      "args": [
+        "--godot_bin",
+        "C:\\Users\\User\\Programs\\Godot_v4.6.33\\Godot_v4.6.3-stable_win64_console.exe",
+        "-a",
+        "res://${relativeFile}"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

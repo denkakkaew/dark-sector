@@ -1,0 +1,16 @@
+{
+  // godot-tools extension: GDScript language server, editor launch, debugging
+  "godot_tools.editor_path": "C:\\Users\\User\\Programs\\Godot_v4.6.33\\Godot_v4.6.3-stable_win64.exe",
+  "godot_tools.gdscript_lsp_server_port": 6005,
+
+  // gdUnit4 (CLI runner + VS Code test adapter) reads GODOT_BIN.
+  // Use the *console* build so test output is captured in the terminal.
+  "terminal.integrated.env.windows": {
+    "GODOT_BIN": "C:\\Users\\User\\Programs\\Godot_v4.6.33\\Godot_v4.6.3-stable_win64_console.exe"
+  },
+  "gdUnit4.settings.godotExecutable": "C:\\Users\\User\\Programs\\Godot_v4.6.33\\Godot_v4.6.3-stable_win64_console.exe",
+
+  "files.exclude": {
+    "**/.godot": true
+  }
+}
