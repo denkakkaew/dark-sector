@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/HitEffect.gd" id="1"]
+
+[node name="HitEffect" type="Node3D"]
+script = ExtResource("1")
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="."]
+amount = 20
+lifetime = 0.45
+one_shot = true
+explosiveness = 0.9
+emitting = false
+direction = Vector3(0, 0, 0)
+spread = 180.0
+gravity = Vector3(0, -1, 0)
+initial_velocity_min = 3.0
+initial_velocity_max = 7.0
+scale_amount_min = 0.08
+scale_amount_max = 0.18
+color = Color(1, 0.55, 0.15, 1)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 4.0
+omni_range = 4.0
