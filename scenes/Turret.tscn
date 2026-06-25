@@ -24,11 +24,14 @@ position = Vector3(0, 0.3, 0)
 mesh = SubResource("BoxMesh_Base")
 surface_material_override/0 = SubResource("Material_Base")
 
-[node name="Barrel" type="MeshInstance3D" parent="."]
-position = Vector3(0, 0.7, -0.6)
+[node name="AimPivot" type="Node3D" parent="."]
+position = Vector3(0, 0.8, 0)
+
+[node name="Barrel" type="MeshInstance3D" parent="AimPivot"]
+position = Vector3(0, 0, -0.6)
 rotation_degrees = Vector3(-90, 0, 0)
 mesh = SubResource("CylinderMesh_Barrel")
 surface_material_override/0 = SubResource("Material_Barrel")
 
-[node name="Muzzle" type="Marker3D" parent="."]
-position = Vector3(0, 0.7, -1.4)
+[node name="Muzzle" type="Marker3D" parent="AimPivot"]
+position = Vector3(0, 0, -1.4)
