@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Dark Sector"
-run/main_scene="res://scenes/demo_3d/TurretDemo3D.tscn"
+run/main_scene="res://scenes/Game.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 

@@ -7,3 +7,7 @@
 
 # Local Claude Code settings (machine-specific)
 .claude/settings.local.json
+
+# Local dev helpers / logs (machine-specific)
+run.log
+run-game.bat
