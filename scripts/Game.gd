@@ -27,6 +27,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_reticle_screen_pos = event.position
 	elif event is InputEventScreenTouch and event.pressed:
 		_reticle_screen_pos = event.position
+	elif event.is_action_pressed("fire"):
+		_turret.try_fire()
 
 func _process(delta: float) -> void:
 	_update_aim()

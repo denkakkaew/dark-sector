@@ -4,7 +4,7 @@ const LASER_SCENE := preload("res://scenes/Laser.tscn")
 
 @export var fire_cooldown: float = 0.2
 @export var laser_speed: float = 60.0
-@export var aim_assist_angle: float = 20.0
+@export var aim_assist_angle: float = 35.0
 
 @onready var _aim_pivot: Node3D = $AimPivot
 

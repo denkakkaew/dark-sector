@@ -46,4 +46,5 @@ offset_left = -200.0
 offset_right = -20.0
 offset_top = -140.0
 offset_bottom = -20.0
+focus_mode = 0
 text = "FIRE"
