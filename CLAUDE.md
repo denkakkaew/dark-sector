@@ -10,11 +10,12 @@ Target deployment: a single **16:9 landscape touchscreen on Windows**. Design an
 
 ## Game design (the spec to build toward)
 
-The player controls a **turret on a space station** and shoots invading alien ships heading for Earth.
+The player controls a **turret on a space station** and shoots invading alien ships heading for Earth. It is also an **educational game for kids ~8–12**: each scene teaches a real space fact. The full screen-by-screen design lives in `planning/STORYBOARD.md`.
 
-- Aliens attack in **3 rounds / levels**, with difficulty rising each level.
-- An **energy bar** decreases whenever an alien ship reaches Earth; if it hits zero, the game ends.
-- Clearing all 3 levels wins, showing the message **"Yay!! We protected Earth!"**.
+- Aliens attack across a **4-scene story campaign** (1 scene = 1 level), with difficulty rising each scene: **ISS (first contact) → Moon (alien forward base) → Mars (aliens mining fuel) → Earth orbit (final stand)**.
+- An **energy bar** decreases whenever an alien ship gets through; if it hits zero, the game ends.
+- **Educational layer:** each scene's mission briefing shows one true "DID YOU KNOW?" space fact; after the scene, a multiple-choice **quiz** on that fact restores energy / grants bonus score (wrong answers cost nothing).
+- Clearing all 4 scenes wins, showing the message **"Yay!! We protected Earth!"**.
 - Supporting systems the build needs: a **sign-in screen** before play, a **timer**, and a **ranking/leaderboard** system.
 
 When adding features, keep these three subsystems (sign-in, timer, ranking) as distinct concerns — they outlive any single level and likely belong in autoload singletons rather than per-scene logic.
