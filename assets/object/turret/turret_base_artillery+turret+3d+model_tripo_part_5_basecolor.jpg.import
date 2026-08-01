@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3rtlfitlilih"
-path="res://.godot/imported/turret_gun_artillery+turret+3d+model_tripo_part_5_basecolor.jpg-d63ba0d508b61e263483b75c47f684fa.ctex"
+uid="uid://cpbig0nrfdvyb"
+path="res://.godot/imported/turret_base_artillery+turret+3d+model_tripo_part_5_basecolor.jpg-b0863108dfeacc641b44c709eab4717b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -13,8 +13,8 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/object/turret/turret_gun_artillery+turret+3d+model_tripo_part_5_basecolor.jpg"
-dest_files=["res://.godot/imported/turret_gun_artillery+turret+3d+model_tripo_part_5_basecolor.jpg-d63ba0d508b61e263483b75c47f684fa.ctex"]
+source_file="res://assets/object/turret/turret_base_artillery+turret+3d+model_tripo_part_5_basecolor.jpg"
+dest_files=["res://.godot/imported/turret_base_artillery+turret+3d+model_tripo_part_5_basecolor.jpg-b0863108dfeacc641b44c709eab4717b.ctex"]
 
 [params]
 

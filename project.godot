@@ -19,6 +19,13 @@ config/icon="res://icon.svg"
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
+[filesystem]
+
+; Blender source files live under planning/ and are brought in as .glb by
+; blender/export_turret.py, never imported directly. Without this, Godot tries
+; to import planning/Turret.blend and fails asking for a Blender executable.
+import/blender/enabled=false
+
 [input]
 
 fire={
