@@ -1,0 +1,12 @@
+{
+  // blender-mcp — drives Blender over MCP (inspect the scene, edit objects/materials,
+  // run Python inside Blender). Needs the companion Blender addon installed and
+  // "Connect to MCP server" enabled in Blender: View3D > N-panel > BlenderMCP.
+  "servers": {
+    "blender": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["blender-mcp"]
+    }
+  }
+}
