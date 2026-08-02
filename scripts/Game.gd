@@ -60,48 +60,58 @@ func _spawn_alien() -> void:
 	var mode := _pick_flight_mode()
 	alien.flight_mode = mode
 
+	var spawn := Vector3.ZERO
+	var target := Vector3.ZERO
+
 	match mode:
 		AlienShip.FlightMode.DIRECT:
 			var angle_h := randf_range(-PI * 0.55, PI * 0.55)
 			var angle_v := randf_range(-0.3, 0.15)
-			var x := sin(angle_h) * spawn_radius
-			var y := 3.0 + sin(angle_v) * 8.0
-			var z := -cos(absf(angle_h)) * spawn_radius
-			alien.global_position = Vector3(x, y, z)
-			var target := Vector3(0.0, 1.5, 7.0)
-			alien.velocity = (target - alien.global_position).normalized() * alien_speed
+			spawn = Vector3(
+				sin(angle_h) * spawn_radius,
+				3.0 + sin(angle_v) * 8.0,
+				-cos(absf(angle_h)) * spawn_radius
+			)
+			target = Vector3(0.0, 1.5, 7.0)
 
 		AlienShip.FlightMode.STRAFE:
 			var side := signf(randf() - 0.5)
-			var x := side * spawn_radius * 0.9
-			var y := randf_range(1.5, 5.0)
-			var z := randf_range(-28.0, -20.0)
-			alien.global_position = Vector3(x, y, z)
-			var target := Vector3(-side * 12.0, 1.5, 7.0)
-			alien.velocity = (target - alien.global_position).normalized() * alien_speed
+			spawn = Vector3(
+				side * spawn_radius * 0.9,
+				randf_range(1.5, 5.0),
+				randf_range(-28.0, -20.0)
+			)
+			target = Vector3(-side * 12.0, 1.5, 7.0)
 
 		AlienShip.FlightMode.WEAVE:
 			var angle_h := randf_range(-PI * 0.45, PI * 0.45)
 			var angle_v := randf_range(-0.2, 0.1)
-			var x := sin(angle_h) * spawn_radius
-			var y := 3.0 + sin(angle_v) * 8.0
-			var z := -cos(absf(angle_h)) * spawn_radius
-			alien.global_position = Vector3(x, y, z)
-			var target := Vector3(0.0, 1.5, 7.0)
-			alien.velocity = (target - alien.global_position).normalized() * alien_speed
+			spawn = Vector3(
+				sin(angle_h) * spawn_radius,
+				3.0 + sin(angle_v) * 8.0,
+				-cos(absf(angle_h)) * spawn_radius
+			)
+			target = Vector3(0.0, 1.5, 7.0)
 			alien._weave_amp = randf_range(3.5, 6.0)
 			alien._weave_freq = randf_range(1.0, 2.0)
 
 		AlienShip.FlightMode.SWOOP:
 			var angle_h := randf_range(-PI * 0.45, PI * 0.45)
 			var angle_v := randf_range(-0.2, 0.1)
-			var x := sin(angle_h) * spawn_radius
-			var y := 4.0 + sin(angle_v) * 6.0
-			var z := -cos(absf(angle_h)) * spawn_radius
-			alien.global_position = Vector3(x, y, z)
-			var target := Vector3(0.0, 2.5, 7.0)
-			alien.velocity = (target - alien.global_position).normalized() * alien_speed
+			spawn = Vector3(
+				sin(angle_h) * spawn_radius,
+				4.0 + sin(angle_v) * 6.0,
+				-cos(absf(angle_h)) * spawn_radius
+			)
+			target = Vector3(0.0, 2.5, 7.0)
 			alien._swoop_amp = randf_range(2.5, 4.5)
 			alien._swoop_freq = randf_range(0.8, 1.6)
 
+	# Into the tree first: global_position on a node that isn't in the tree has
+	# no parent transform to resolve against, so the assignment is dropped and
+	# every spawn logs an error. It only looked like it worked because this node
+	# sits at the origin untransformed, which made the lost global equal the
+	# local it fell back to — moving Game or reparenting aliens would break it.
 	add_child(alien)
+	alien.global_position = spawn
+	alien.velocity = (target - spawn).normalized() * alien_speed

@@ -14,12 +14,23 @@ func _process(delta: float) -> void:
 	_fire_cooldown_remaining = maxf(_fire_cooldown_remaining - delta, 0.0)
 
 func aim_at(world_pos: Vector3) -> void:
-	var to_aim := world_pos - _aim_pivot.global_position
+	var target := _clamp_to_horizon(world_pos)
+	var to_aim := target - _aim_pivot.global_position
 	if to_aim.length_squared() < 0.01:
 		return
 	if absf(to_aim.normalized().dot(Vector3.UP)) > 0.99:
 		return
-	_aim_pivot.look_at(world_pos, Vector3.UP)
+	_aim_pivot.look_at(target, Vector3.UP)
+
+func _clamp_to_horizon(world_pos: Vector3) -> Vector3:
+	# The gun is bolted to a platform: it swings freely but never depresses below
+	# the horizontal. Anything under the trunnion is aimed at flat instead of
+	# down into the pedestal. The camera looks down at the turret, so without
+	# this the lower half of the screen — which is below the horizon — drags the
+	# barrel into the ground, including with the reticle at rest in the centre.
+	var target := world_pos
+	target.y = maxf(target.y, _aim_pivot.global_position.y)
+	return target
 
 func try_fire() -> void:
 	if _fire_cooldown_remaining > 0.0:
@@ -47,4 +58,4 @@ func _apply_aim_assist() -> void:
 			best_cos = dot
 			best = alien
 	if best:
-		_aim_pivot.look_at(best.global_position, Vector3.UP)
+		_aim_pivot.look_at(_clamp_to_horizon(best.global_position), Vector3.UP)
