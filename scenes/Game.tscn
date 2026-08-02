@@ -17,8 +17,11 @@ ambient_light_color = Color(0.12, 0.12, 0.18, 1)
 [sub_resource type="QuadMesh" id="QuadMesh_backdrop"]
 size = Vector2(164.97, 92.079)
 
+; Knocked back so Earth sits behind the play area instead of competing with it,
+; and so the bright limb the aliens cross doesn't swallow them.
 [sub_resource type="StandardMaterial3D" id="Material_backdrop"]
 shading_mode = 0
+albedo_color = Color(0.7, 0.7, 0.7, 1)
 albedo_texture = ExtResource("5")
 texture_filter = 4
 
