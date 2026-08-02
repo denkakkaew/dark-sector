@@ -22,7 +22,15 @@ current = true
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 position = Vector3(0, 10, 0)
 rotation_degrees = Vector3(-50, -30, 0)
+light_energy = 0.35
 shadow_enabled = true
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+position = Vector3(0, 10, 0)
+rotation_degrees = Vector3(-40, 150, 0)
+light_color = Color(0.88, 0.92, 1, 1)
+light_energy = 0.55
+shadow_enabled = false
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
