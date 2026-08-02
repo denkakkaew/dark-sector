@@ -19,6 +19,18 @@ config/icon="res://icon.svg"
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
+[display]
+
+; The whole scene is composed for one fixed 16:9 landscape screen — the turret's
+; framing, the station plate spanning the bottom corners and the reticle-to-aim
+; mapping are all tuned against that shape. "keep" letterboxes/pillarboxes any
+; other window shape with black bars rather than re-framing the 3D, so maximising
+; or resizing scales the picture instead of changing it.
+window/size/viewport_width=1152
+window/size/viewport_height=648
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
 [filesystem]
 
 ; Blender source files live under planning/ and are brought in as .glb by
