@@ -49,8 +49,9 @@ from mathutils import Matrix, Vector
 # was laid out around (old placeholder base was 2.5 x 2.0).
 GAME_SCALE = 0.2
 
-# Triangle budget per part, after decimation.
-TRI_BUDGET = {"gun": 25000, "base": 25000}
+# Triangle budget per part, after decimation. The hull gets more because it is
+# the widest thing on screen and creases show up badly on a big curved surface.
+TRI_BUDGET = {"gun": 25000, "base": 25000, "hull": 40000}
 
 # Never decimate a single part below this, so small greebles keep their shape
 # instead of collapsing into slivers at the global ratio.
@@ -62,20 +63,35 @@ MAX_TEXTURE_SIZE = 512
 
 JPEG_QUALITY = 85
 
+# Each part names the collections it is built from. `hull` is the curved station
+# surface the turret is bolted to — it is exported on the pedestal's own pivot,
+# so it drops into Godot already lined up with the turret instead of needing to
+# be positioned against it by hand.
 PARTS = {
-    "gun": {"collection": "Turret", "out": "turret_gun.glb"},
-    "base": {"collection": "TurretBase", "out": "turret_base.glb"},
+    "gun": {"collections": ["Turret"], "out": "turret_gun.glb", "dir": "turret"},
+    "base": {"collections": ["TurretBase"], "out": "turret_base.glb", "dir": "turret"},
+    "hull": {
+        "collections": ["ISS_TurretBase1", "ISS_TurretBase2"],
+        "out": "iss_hull.glb",
+        "dir": "iss",
+    },
 }
 
-# Its own folder: Godot extracts every embedded texture next to the .glb on
-# import, and this model carries one basecolor map per part.
-OUT_DIR = os.path.join("assets", "object", "turret")
+# Each part gets its own folder: Godot extracts every embedded texture next to
+# the .glb on import, and these models carry one basecolor map per piece.
+OUT_ROOT = os.path.join("assets", "object")
 
 # --- geometry measurement ---------------------------------------------------
 
 
-def _meshes(collection_name):
-    return [o for o in bpy.data.collections[collection_name].objects if o.type == "MESH"]
+def _meshes(part):
+    objs = []
+    for name in PARTS[part]["collections"]:
+        coll = bpy.data.collections.get(name)
+        if coll is None:
+            raise RuntimeError("collection %r not found in the .blend" % name)
+        objs.extend(o for o in coll.objects if o.type == "MESH")
+    return objs
 
 
 def _world_verts(objs):
@@ -100,7 +116,7 @@ def _bounds(objs):
 
 def _yaw_axis():
     """Vertical axis the gun spins around: the centre of the pedestal footprint."""
-    lo, hi = _bounds(_meshes(PARTS["base"]["collection"]))
+    lo, hi = _bounds(_meshes("base"))
     return (lo.x + hi.x) * 0.5, (lo.y + hi.y) * 0.5, lo.z
 
 
@@ -181,7 +197,7 @@ def _barrel_elevation(gun_objs, pivot_y, pivot_z, yaw_x):
 
 def measure():
     """Work out both pivots and the barrel's resting elevation from the mesh."""
-    gun_objs = _meshes(PARTS["gun"]["collection"])
+    gun_objs = _meshes("gun")
     yaw_x, yaw_y, base_z = _yaw_axis()
 
     boss = _trunnion(gun_objs, yaw_x)
@@ -209,6 +225,8 @@ def _transform(part, m):
     if part == "gun":
         level = Matrix.Rotation(m["elevation"], 4, "X")
         return scale @ flip @ level @ Matrix.Translation(-m["gun_pivot"])
+    # base and hull share the pedestal's pivot, which is what keeps the station
+    # surface sitting under the turret exactly as it does in Blender.
     return scale @ flip @ Matrix.Translation(-m["base_pivot"])
 
 
@@ -246,7 +264,7 @@ def _shrink_textures(obj, trash):
 
 def _build_copies(part, matrix, trash):
     """Duplicate the part's meshes, transform them and queue decimation."""
-    objs = _meshes(PARTS[part]["collection"])
+    objs = _meshes(part)
     total = sum(len(o.data.polygons) for o in objs)
     ratio = min(1.0, TRI_BUDGET[part] / float(total))
 
@@ -323,7 +341,7 @@ def _discard(trash):
 def _project_root():
     """Repo root, whether the script is run from a file or pasted into Blender."""
     here = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else ""
-    if here and os.path.isdir(os.path.join(os.path.dirname(here), OUT_DIR)):
+    if here and os.path.isdir(os.path.join(os.path.dirname(here), OUT_ROOT)):
         return os.path.dirname(here)
     return os.path.abspath(os.getcwd())
 
@@ -337,7 +355,7 @@ def export_part(part, out_dir=None):
     matrix = _transform(part, m)
     trash = {k: [] for k in ("objects", "meshes", "materials", "images", "collections")}
 
-    root = out_dir or os.path.join(_project_root(), OUT_DIR)
+    root = out_dir or os.path.join(_project_root(), OUT_ROOT, PARTS[part]["dir"])
     os.makedirs(root, exist_ok=True)
     path = os.path.join(root, PARTS[part]["out"])
 
@@ -389,7 +407,7 @@ def export_part(part, out_dir=None):
 
 
 def export_all(out_dir=None):
-    return [export_part(p, out_dir) for p in ("base", "gun")]
+    return [export_part(p, out_dir) for p in ("base", "gun", "hull")]
 
 
 if __name__ == "__main__":
