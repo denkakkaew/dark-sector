@@ -1,15 +1,24 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/Game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Turret.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/Reticle.gd" id="3"]
 [ext_resource type="PackedScene" path="res://assets/object/iss/iss_hull.glb" id="4"]
+[ext_resource type="Texture2D" path="res://assets/backdrop/iss_deck.png" id="5"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0.02, 0.02, 0.06, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.12, 0.12, 0.18, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_backdrop"]
+size = Vector2(163.696, 92.079)
+
+[sub_resource type="StandardMaterial3D" id="Material_backdrop"]
+shading_mode = 0
+albedo_texture = ExtResource("5")
+texture_filter = 4
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1")
@@ -27,8 +36,14 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
 
+[node name="Backdrop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9848078, 0.1736482, 0, -0.1736482, 0.9848078, 0, -6.219, -48.088)
+mesh = SubResource("QuadMesh_backdrop")
+surface_material_override/0 = SubResource("Material_backdrop")
+
 [node name="ISSHull" parent="." instance=ExtResource("4")]
 transform = Transform3D(1.4, 0, 0, 0, 1, 0, 0, 0, 0.65, 0, 0, 7.5)
+visible = false
 
 [node name="Turret" parent="." instance=ExtResource("2")]
 position = Vector3(0, 0, 7.5)
