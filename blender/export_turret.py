@@ -94,11 +94,9 @@ LINEAR_MID_GREY = 0.21
 PARTS = {
     "gun": {"collections": ["Turret"], "out": "turret_gun.glb", "dir": "turret"},
     "base": {"collections": ["TurretBase"], "out": "turret_base.glb", "dir": "turret"},
-    "hull": {
-        "collections": ["ISS_TurretBase1", "ISS_TurretBase2"],
-        "out": "iss_hull.glb",
-        "dir": "iss",
-    },
+    # `parents` names an empty whose mesh descendants make up the part, for
+    # imports that land parented to a root rather than in their own collection.
+    "hull": {"parents": ["Portion"], "out": "iss_hull.glb", "dir": "iss"},
 }
 
 # Each part gets its own folder: Godot extracts every embedded texture next to
@@ -108,13 +106,33 @@ OUT_ROOT = os.path.join("assets", "object")
 # --- geometry measurement ---------------------------------------------------
 
 
-def _meshes(part):
-    objs = []
-    for name in PARTS[part]["collections"]:
+def _groups(part):
+    """(name, meshes) pairs making up the part.
+
+    A group is the unit the colour grade is balanced over, so pieces that came
+    out of the same generator run stay together and get one shared correction.
+    """
+    spec = PARTS[part]
+    groups = []
+    for name in spec.get("collections", []):
         coll = bpy.data.collections.get(name)
         if coll is None:
             raise RuntimeError("collection %r not found in the .blend" % name)
-        objs.extend(o for o in coll.objects if o.type == "MESH")
+        groups.append((name, [o for o in coll.objects if o.type == "MESH"]))
+    for name in spec.get("parents", []):
+        root = bpy.data.objects.get(name)
+        if root is None:
+            raise RuntimeError("object %r not found in the .blend" % name)
+        groups.append((name, [o for o in root.children_recursive if o.type == "MESH"]))
+    if not any(objs for _, objs in groups):
+        raise RuntimeError("part %r resolved to no meshes" % part)
+    return groups
+
+
+def _meshes(part):
+    objs = []
+    for _, group in _groups(part):
+        objs.extend(group)
     return objs
 
 
@@ -381,11 +399,10 @@ def _build_copies(part, matrix, trash):
     cache = {}
     report = {}
 
-    # Balanced per collection, not per part: the two hull collections came out of
-    # Tripo with opposite casts, so one shared gain would fix the warm half and
-    # push the already-neutral half too cool.
-    for name in PARTS[part]["collections"]:
-        group = [o for o in bpy.data.collections[name].objects if o.type == "MESH"]
+    # Balanced per group, not per part: pieces from different Tripo runs can
+    # carry opposite casts, so one shared gain would fix one and push the other
+    # the wrong way.
+    for name, group in _groups(part):
         gain = (1.0, 1.0, 1.0)
         if grade:
             gain, measured = _white_balance(group)
