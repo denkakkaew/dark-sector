@@ -106,11 +106,16 @@ text = "The ISS orbits ~400 km above Earth."
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Hint" type="Label" parent="Layout/Column"]
-theme_override_font_sizes/font_size = 20
-theme_override_colors/font_color = Color(0.65, 0.72, 0.85, 1)
-text = "TAP TO CONTINUE"
-horizontal_alignment = 1
+[node name="Gap2" type="Control" parent="Layout/Column"]
+custom_minimum_size = Vector2(0, 6)
+
+; The only way out of this screen. Nothing here is on a timer — the fact card is
+; the teaching moment, so the player decides when they have finished reading it.
+[node name="ContinueButton" type="Button" parent="Layout/Column"]
+custom_minimum_size = Vector2(460, 84)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
+text = "START THE QUIZ"
 
 ; Stripped before the kiosk build — see Briefing.gd.
 [node name="DevHint" type="Label" parent="."]
