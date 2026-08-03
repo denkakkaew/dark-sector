@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/Game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Turret.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://assets/object/iss/iss_hull.glb" id="4"]
 [ext_resource type="Texture2D" path="res://assets/backdrop/space_earth.png" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="6"]
+[ext_resource type="Script" path="res://scripts/BackdropTraffic.gd" id="7"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -54,6 +55,12 @@ environment = SubResource("Environment_1")
 transform = Transform3D(1, 0, 0, 0, 0.9848078, 0.1736482, 0, -0.1736482, 0.9848078, 0, -6.219, -48.088)
 mesh = SubResource("QuadMesh_backdrop")
 surface_material_override/0 = SubResource("Material_backdrop")
+
+; Scenery between the backdrop and the play area — see BackdropTraffic.gd. How
+; many ships is per-scene data, so this node is harmless in the scenes that
+; don't want any.
+[node name="BackdropTraffic" type="Node3D" parent="."]
+script = ExtResource("7")
 
 [node name="ISSHull" parent="." instance=ExtResource("4")]
 transform = Transform3D(1.4, 0, 0, 0, 1, 0, 0, 0, 0.65, 0, 0, 7.5)
