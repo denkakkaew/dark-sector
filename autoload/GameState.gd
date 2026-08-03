@@ -174,14 +174,18 @@ func end_run() -> void:
 
 ## Formats the campaign timer as M:SS — the total shown on end-of-run cards.
 func time_text() -> String:
-	return _mmss(int(elapsed_time))
+	return format_time(elapsed_time)
 
 
 ## Formats the scene countdown as M:SS for the HUD's clock. Rounded *up*, so the
 ## clock only shows 0:00 when the time really is gone.
 func scene_time_text() -> String:
-	return _mmss(int(ceil(scene_time_left)))
+	return format_time(ceil(scene_time_left))
 
 
-func _mmss(total_seconds: int) -> String:
-	return "%d:%02d" % [total_seconds / 60, total_seconds % 60]
+## M:SS for any number of seconds. Public and static-shaped because the results
+## board formats times from the leaderboard file, which belong to runs that this
+## `GameState` never played.
+func format_time(seconds: float) -> String:
+	var total := maxi(0, int(seconds))
+	return "%d:%02d" % [total / 60, total % 60]
