@@ -64,7 +64,7 @@ func _on_area_entered(area: Area3D) -> void:
 
 func _explode() -> void:
 	_destroyed = true
-	$MeshInstance3D.visible = false
+	$Model.visible = false
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position
