@@ -128,7 +128,12 @@ func _on_scene_started(index: int) -> void:
 
 
 func _on_game_over() -> void:
-	_final_score_label.text = "SCORE %d   TIME %s" % [GameState.score, GameState.time_text()]
+	# Storyboard screen 8 names the scene the run died on rather than numbering
+	# it — "Mars" is what the player will tell the next person in the queue.
+	_final_score_label.text = "REACHED SCENE %d · %s\nSCORE %d   TIME %s" % [
+		GameState.scene_index, GameState.scene_name(),
+		GameState.score, GameState.time_text(),
+	]
 	_game_over_panel.show()
 	_retry_button.grab_focus()
 	# Freezes the battle behind the card; this node is PROCESS_MODE_ALWAYS.
@@ -136,16 +141,20 @@ func _on_game_over() -> void:
 
 
 func _on_retry_pressed() -> void:
-	SceneRouter.start_campaign()
+	# The lost run still goes on the board — the storyboard is explicit that it is
+	# recorded and shown, and a kiosk board of nothing but wins would only ever
+	# have the very best players on it.
+	SceneRouter.finish_run(false)
 
 
 func _on_scene_cleared(index: int, timed_out: bool) -> void:
 	var last_scene := GameState.campaign_complete()
 	if last_scene:
-		# The storyboard's victory line, verbatim. Phase 8's Results screen takes
-		# this over, with the ranked board under it.
+		# Storyboard screen 7, and its win line verbatim. The card stays the place
+		# the win is announced; CONTINUE hands off to the router, which records
+		# the run and opens the board under it (screen 9).
 		_cleared_title.text = "Yay!! We protected Earth!"
-		_continue_button.text = "PLAY AGAIN"
+		_continue_button.text = "VIEW RANKING  ▶"
 	else:
 		_cleared_title.text = "SCENE %d CLEARED" % index
 		_continue_button.text = "NEXT MISSION"

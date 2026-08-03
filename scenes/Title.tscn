@@ -1,0 +1,113 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Title.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/SpaceBackdrop.tscn" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_start"]
+content_margin_left = 40.0
+content_margin_top = 18.0
+content_margin_right = 40.0
+content_margin_bottom = 18.0
+bg_color = Color(0.09, 0.14, 0.24, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.35, 0.68, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="Title" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.025, 0.03, 0.055, 1)
+
+; The same Earth-and-alien-traffic backdrop the briefing and quiz use, so the
+; kiosk's first screen already shows what the game is about — and so an idle
+; screen has something moving on it.
+[node name="SpaceBackdrop" parent="." instance=ExtResource("2")]
+
+[node name="Layout" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 90
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 90
+theme_override_constants/margin_bottom = 70
+
+[node name="Column" type="VBoxContainer" parent="Layout"]
+alignment = 1
+theme_override_constants/separation = 18
+
+; Wide letter spacing is doing the work of a logo here — there is no wordmark art
+; yet, and a plain centred title at this size reads as placeholder rather than as
+; a game. Replace with the real logo in the art pass.
+[node name="Logo" type="Label" parent="Layout/Column"]
+theme_override_font_sizes/font_size = 88
+theme_override_colors/font_color = Color(0.93, 0.97, 1, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.42, 0.78, 0.85)
+theme_override_constants/outline_size = 10
+text = "D A R K   S E C T O R"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Layout/Column"]
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.72, 0.82, 0.95, 1)
+text = "defend the solar system.   learn its secrets."
+horizontal_alignment = 1
+
+[node name="Gap" type="Control" parent="Layout/Column"]
+custom_minimum_size = Vector2(0, 34)
+
+[node name="StartButton" type="Button" parent="Layout/Column"]
+custom_minimum_size = Vector2(420, 96)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBox_start")
+theme_override_styles/hover = SubResource("StyleBox_start")
+theme_override_styles/pressed = SubResource("StyleBox_start")
+theme_override_styles/focus = SubResource("StyleBox_start")
+text = "▶  START"
+
+[node name="Corner" type="Control" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -96.0
+offset_right = -36.0
+offset_bottom = -32.0
+grow_horizontal = 0
+grow_vertical = 0
+
+; Secondary on purpose: the board is for the player who has just finished, and
+; for whoever wants to see what they are up against. START is the screen's job.
+[node name="RankingButton" type="Button" parent="Corner"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 22
+text = "🏆  RANKING"
+
+[node name="Version" type="Label" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -28.0
+offset_right = -36.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.45, 0.5, 0.6, 1)
+text = "v1.0"
+horizontal_alignment = 2

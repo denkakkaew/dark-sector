@@ -162,13 +162,16 @@ horizontal_alignment = 1
 
 [node name="FinalScore" type="Label" parent="GameOverPanel/Card/Layout"]
 theme_override_font_sizes/font_size = 26
-text = "SCORE 0   TIME 0:00"
+text = "REACHED SCENE 1 · ISS
+SCORE 0   TIME 0:00"
 horizontal_alignment = 1
 
+; Leads to the results board, where the run is recorded and Play Again lives —
+; see HUD.gd. A lost run is still a run and still goes on the board.
 [node name="RetryButton" type="Button" parent="GameOverPanel/Card/Layout"]
-custom_minimum_size = Vector2(260, 76)
+custom_minimum_size = Vector2(320, 76)
 theme_override_font_sizes/font_size = 30
-text = "RETRY"
+text = "VIEW RANKING  ▶"
 
 ; Phase 6 replaces this with the storyboard's Scene Cleared screen (6) and the
 ; victory screen (7); for now it is the same card shape as game over, so the end
@@ -206,6 +209,6 @@ text = "SCORE 0   TIME 0:00"
 horizontal_alignment = 1
 
 [node name="ContinueButton" type="Button" parent="SceneClearedPanel/Card/Layout"]
-custom_minimum_size = Vector2(260, 76)
+custom_minimum_size = Vector2(320, 76)
 theme_override_font_sizes/font_size = 30
 text = "CONTINUE"

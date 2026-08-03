@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Dark Sector** — an alien-shooting arcade game built in **Godot 4.6** (GL Compatibility renderer, Jolt physics for 3D). The **campaign is playable end to end**: `Briefing.tscn` (set as `run/main_scene`) opens scene 1, and `SceneRouter` runs briefing → quiz → battle → scene cleared → … through all four destinations to the win text. `Game.tscn` is the battle — a reticle-aimed turret firing lasers at alien ships in four flight modes, over a per-scene sky, lighting and planet backdrop, with Mars' armoured ore carrier. A web build is exported under `docs/` for GitHub Pages, and the gdUnit4 test addon is installed. Still to build: title, sign-in and the results/ranking screen — see `planning/STORYBOARD.md` for the full spec and `planning/IMPLEMENTATION_PLAN.md` for the phased roadmap and what's done vs. pending.
+**Dark Sector** — an alien-shooting arcade game built in **Godot 4.6** (GL Compatibility renderer, Jolt physics for 3D). **Every storyboard screen now exists**: `Title.tscn` (set as `run/main_scene`) → sign-in → `SceneRouter` runs briefing → quiz → battle → scene cleared through all four destinations to the win text → `Results.tscn`, the ranked board persisted by the `Leaderboard` autoload. `Game.tscn` is the battle — a reticle-aimed turret firing lasers at alien ships in four flight modes, over a per-scene sky, lighting and planet backdrop, with Mars' armoured ore carrier. A web build is exported under `docs/` for GitHub Pages (stale — refreshed in Phase 9), and the gdUnit4 test addon is installed. What's left is Phase 9 polish: sound, attract mode, an idle reset, touch tuning and the exports — see `planning/STORYBOARD.md` for the full spec and `planning/IMPLEMENTATION_PLAN.md` for the phased roadmap and what's done vs. pending.
 
 Target deployment: a single **16:9 landscape touchscreen on Windows**. Design and test for touch input and that fixed aspect ratio first; mouse is only a development stand-in.
 
@@ -30,7 +30,7 @@ When adding features, keep these three subsystems (sign-in, timer, ranking) as d
 ## Working in this project
 
 - Open in the editor: `godot --editor --path .` (or `godot -e`). The Godot 4.6 editor is the primary tool — most scene, node, and resource wiring happens through the UI, not by hand-editing `.tscn`/`.tres` files. (Note: `godot` is not currently on this machine's PATH — locate/confirm the Godot 4.6 binary or launch from the installed editor.)
-- Run the game from CLI: `godot --path .` runs `run/main_scene`, currently `res://scenes/Game.tscn` (the playable gameplay scene). Once the flow screens exist this becomes `Title.tscn`.
+- Run the game from CLI: `godot --path .` runs `run/main_scene`, `res://scenes/Title.tscn`. Pass a scene path as a positional argument (`godot --path . res://scenes/Quiz.tscn`) to boot straight into one screen; the briefing also has dev keys 1–4 to jump scenes.
 - Run tests: gdUnit4 is installed (`addons/gdUnit4/`); tests live under `tests/`.
 - Export a Windows build: configure an export preset in the editor, then `godot --headless --export-release "Windows Desktop" <output.exe>`. The web/kiosk build is exported to `docs/` for GitHub Pages.
 - `.godot/` is generated cache (gitignored) — never edit it; delete it to force a reimport if assets get stuck.
@@ -38,7 +38,7 @@ When adding features, keep these three subsystems (sign-in, timer, ranking) as d
 ## Conventions
 
 - GDScript files use `.gd`; scenes `.tscn`; resources `.tres`. Prefer scenes + GDScript unless there's a reason to add C# (no C# / .NET is configured here).
-- Cross-scene state (current scene, energy, score, quiz tally, signed-in user) should live in **autoload singletons** registered under `[autoload]` in `project.godot`, not passed manually between scenes. The planned singletons are `GameState` (game flow + state/signals), `SceneRouter` (screen transitions), and `Leaderboard` (`user://` persistence) — none exist yet.
+- Cross-scene state (current scene, energy, score, quiz tally, signed-in user) lives in **autoload singletons** registered under `[autoload]` in `project.godot`, not passed manually between scenes: `GameState` (game flow + state/signals), `Leaderboard` (`user://leaderboard.json` persistence) and `SceneRouter` (every screen transition), loaded in that order. Note that autoload identifiers do **not** resolve in a script run with `-s` that replaces the main loop — flow harnesses have to run as a scene.
 - Per-scene content (story line, fact card, quiz, spawn table, backdrop) belongs in one **campaign data table** (`CampaignData.gd`) that briefing, quiz, HUD, and spawner all read from — adding a fact or a 5th scene should be a data change, not a code change.
 - Current layout: gameplay scenes in `res://scenes/` (`Game`, `Turret`, `AlienShip`, `Laser`, `HitEffect`) and their scripts in `res://scripts/`. Extend these rather than recreating them; keep the `scenes/`–`scripts/` split.
 - Hand-editing a `.tscn` to give a script a node reference (`@export var x: SomeNode`) needs
