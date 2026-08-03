@@ -125,10 +125,18 @@ def _transform():
     pilot ends up facing Godot's +Z after the glTF Y-up conversion, and scales
     into game units.
 
-    The model faces +X in Blender (it is mirror-symmetric about the XZ plane,
-    and the dome pushes the bounds out on +X). glTF Y-up maps Blender (x, y, z)
-    to (x, z, -y), so Blender -Y is what becomes Godot +Z — hence the -90 yaw,
-    which swings +X around onto -Y.
+    **The source model must face +X in Blender** — check it in the Numpad-3
+    (Right) view, where you should be looking the pilot in the face. Don't try
+    to infer the facing from the bounds: the saucer is very nearly as wide as
+    it is long, so which axis is "longer" flips with small edits to the model
+    and says nothing about which end is the nose.
+
+    The yaw direction was settled in the engine, not on paper: park a ship
+    close in front of the gameplay camera and look at its face. Blender's Y-up
+    conversion sends Blender -Y to Godot +Z, which is the way the ships fly, so
+    the nose has to end up on -Y — hence the -90 yaw, swinging it round from
+    +X. (The mirror of this, +90, presents the dome to the player and reads as
+    the saucer flying home tail-first.)
     """
     lo, hi = _vert_bounds(_meshes())
     centre = (lo + hi) * 0.5

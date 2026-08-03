@@ -8,7 +8,7 @@
 ; changes. The disc doesn't fill the box's corners, which just makes a near
 ; miss count as a hit; that is the friendly side to err on for this audience.
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.86, 1.15, 1.94)
+size = Vector3(1.93, 1.15, 1.87)
 
 [node name="AlienShip" type="Area3D"]
 script = ExtResource("1")
