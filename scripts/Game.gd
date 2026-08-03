@@ -1,6 +1,7 @@
 extends Node3D
 
 const ALIEN_SHIP_SCENE := preload("res://scenes/AlienShip.tscn")
+const ORE_CARRIER_SCENE := preload("res://scenes/OreCarrier.tscn")
 const AlienShip = preload("res://scripts/AlienShip.gd")
 const AIM_DISTANCE: float = 20.0
 
@@ -12,6 +13,7 @@ const AIM_DISTANCE: float = 20.0
 @onready var _turret = $Turret
 @onready var _reticle = $UI/Reticle
 @onready var _hud = $UI/HUD
+@onready var _scene_look = $SceneLook
 
 var _reticle_screen_pos: Vector2
 var _spawn_timer: float = 0.0
@@ -24,12 +26,16 @@ var _mode_weights: Array = []
 var _to_spawn: int = 0
 ## Aliens in the air: spawned, not yet shot down and not yet through.
 var _alive: int = 0
+## One entry per spawn, true where an ore carrier flies instead of a scout.
+## Read back-to-front, because `_to_spawn` counts down.
+var _spawn_plan: Array = []
 
 func _ready() -> void:
 	_reticle_screen_pos = get_viewport().get_visible_rect().size / 2.0
 	# The scene index is carried by GameState, so a reload after "continue" comes
 	# up as the next scene. Phase 7 has SceneRouter load this scene; until then
 	# starting it here is what sets the HUD, the wave and the timer going.
+	_scene_look.apply(GameState.scene_index)
 	_load_wave(GameState.scene_index)
 	GameState.start_scene(GameState.scene_index)
 
@@ -39,6 +45,7 @@ func _load_wave(scene_index: int) -> void:
 	_alien_speed = wave["speed"]
 	_mode_weights = wave["mode_weights"]
 	_to_spawn = wave["count"]
+	_spawn_plan = CampaignData.spawn_plan(scene_index)
 	_alive = 0
 	# First alien flies in on the beat, not the instant the scene opens.
 	_spawn_timer = _spawn_interval
@@ -63,8 +70,11 @@ func _process(delta: float) -> void:
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = _spawn_interval
+		# Which spawn of the wave this is, read off the front of the plan while
+		# `_to_spawn` counts down from the back.
+		var slot := _spawn_plan.size() - _to_spawn
 		_to_spawn -= 1
-		_spawn_alien()
+		_spawn_alien(slot < _spawn_plan.size() and _spawn_plan[slot])
 
 func _update_aim() -> void:
 	var ray_origin := _camera.project_ray_origin(_reticle_screen_pos)
@@ -90,9 +100,17 @@ func _pick_flight_mode() -> AlienShip.FlightMode:
 			return i as AlienShip.FlightMode
 	return AlienShip.FlightMode.DIRECT
 
-func _spawn_alien() -> void:
-	var alien: Area3D = ALIEN_SHIP_SCENE.instantiate()
-	var mode := _pick_flight_mode()
+func _spawn_alien(ore_carrier: bool = false) -> void:
+	var alien: Area3D = ORE_CARRIER_SCENE.instantiate() if ore_carrier else ALIEN_SHIP_SCENE.instantiate()
+	# A carrier is a loaded freighter, not a fighter: it lumbers straight in
+	# whatever the scene's flight-mode weights say, which is what gives the
+	# player the time a three-hit target needs.
+	var mode := AlienShip.FlightMode.DIRECT if ore_carrier else _pick_flight_mode()
+	var speed := _alien_speed * (CampaignData.ORE_CARRIER["speed_scale"] if ore_carrier else 1.0)
+	if ore_carrier:
+		alien.scale = Vector3.ONE * CampaignData.ORE_CARRIER["size"]
+		alien.score_value = CampaignData.ORE_CARRIER["score"]
+		alien.hit_points = CampaignData.ORE_CARRIER["hit_points"]
 	alien.flight_mode = mode
 
 	var spawn := Vector3.ZERO
@@ -149,7 +167,7 @@ func _spawn_alien() -> void:
 	# local it fell back to — moving Game or reparenting aliens would break it.
 	add_child(alien)
 	alien.global_position = spawn
-	alien.velocity = (target - spawn).normalized() * _alien_speed
+	alien.velocity = (target - spawn).normalized() * speed
 	alien.destroyed.connect(_on_alien_destroyed)
 	alien.got_through.connect(_on_alien_got_through)
 	_alive += 1
