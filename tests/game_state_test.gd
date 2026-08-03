@@ -167,6 +167,46 @@ func test_a_leak_that_empties_the_bar_ends_the_run_not_the_scene() -> void:
 	assert_array(clears).is_empty()
 
 
+func test_a_correct_quiz_answer_charges_the_bar_full_and_pays_a_bonus() -> void:
+	var state := _make_state()
+	state.set_energy(0.0)
+
+	state.record_quiz_answer(true)
+
+	assert_float(state.energy).is_equal(state.MAX_ENERGY)
+	assert_int(state.score).is_equal(state.QUIZ_BONUS)
+	assert_int(state.quiz_correct_count).is_equal(1)
+	assert_int(state.quiz_total_count).is_equal(1)
+
+
+func test_a_wrong_quiz_answer_is_a_handicap_not_a_punishment() -> void:
+	var state := _make_state()
+	state.add_score(1000)
+
+	state.record_quiz_answer(false)
+
+	# A partial bar is the whole cost: no score is taken away, and the run is
+	# emphatically not over — the storyboard's "kids can't lose here" rule.
+	assert_float(state.energy).is_equal_approx(state.MAX_ENERGY * state.PARTIAL_ENERGY, 0.001)
+	assert_int(state.score).is_equal(1000)
+	assert_bool(state.scene_running).is_true()
+	assert_int(state.quiz_correct_count).is_equal(0)
+	assert_int(state.quiz_total_count).is_equal(1)
+
+
+func test_the_quiz_tally_counts_every_scene_across_the_campaign() -> void:
+	var state := _make_state()
+
+	state.record_quiz_answer(true)
+	state.record_quiz_answer(false)
+	state.record_quiz_answer(true)
+
+	assert_int(state.quiz_correct_count).is_equal(2)
+	assert_int(state.quiz_total_count).is_equal(3)
+	# Only the two correct ones paid out.
+	assert_int(state.score).is_equal(state.QUIZ_BONUS * 2)
+
+
 func test_advancing_runs_out_at_the_end_of_the_campaign() -> void:
 	var state := _make_state()
 

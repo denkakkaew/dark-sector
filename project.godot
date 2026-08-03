@@ -11,7 +11,8 @@ config_version=5
 [application]
 
 config/name="Dark Sector"
-run/main_scene="res://scenes/Game.tscn"
+; The campaign's first screen. Phase 8 moves this again, to Title.tscn.
+run/main_scene="res://scenes/Briefing.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -22,8 +23,10 @@ enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 [autoload]
 
 ; Cross-scene state (score, energy, quiz tally, run timer). Autoloaded so it
-; survives the scene reload behind the game-over Retry button.
+; survives the screen changes between briefing, quiz and battle.
 GameState="*res://autoload/GameState.gd"
+; Owns every screen transition. Loaded after GameState because it drives it.
+SceneRouter="*res://autoload/SceneRouter.gd"
 
 [display]
 

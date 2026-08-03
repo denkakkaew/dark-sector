@@ -35,10 +35,16 @@ const MODE_SWOOP: int = 3
 ##   not the main pressure: each wave takes roughly half this to fly itself out,
 ##   so a scene normally ends by being cleared. It exists so an idle kiosk can
 ##   never sit in a scene forever.
+##
+## `accent` is the scene's signature colour, from the storyboard's per-scene
+## palette. The briefing and quiz tint themselves with it so the four missions
+## read as different places before any real art exists; Phase 6's backdrops and
+## fog read from the same field, so the screens and the battle stay in step.
 const SCENES: Array = [
 	{
 		"name": "ISS",
 		"title": "ISS — First Contact",
+		"accent": Color(0.24, 0.55, 0.9),
 		"story": "Alien scouts are attacking the International Space Station — man the turret!",
 		"fact": "The ISS orbits ~400 km above Earth at ~28,000 km/h. Astronauts on board see 16 sunrises every day!",
 		"question": "How many sunrises do ISS astronauts see each day?",
@@ -56,6 +62,7 @@ const SCENES: Array = [
 	{
 		"name": "MOON",
 		"title": "The Moon — Forward Base",
+		"accent": Color(0.62, 0.66, 0.72),
 		"story": "The aliens are building a secret base on the far side of the Moon. Stop the landers!",
 		"fact": "The Moon is 384,400 km from Earth, and its gravity is only 1/6 of ours. We always see the same side!",
 		"question": "How strong is the Moon's gravity compared to Earth's?",
@@ -73,6 +80,7 @@ const SCENES: Array = [
 	{
 		"name": "MARS",
 		"title": "Mars — The Mining Raid",
+		"accent": Color(0.82, 0.38, 0.2),
 		"story": "Alien drones are stealing minerals from Mars to fuel their fleet. Stop the ore carriers!",
 		"fact": "Mars is red because of iron rust, and it has the tallest volcano in the solar system: Olympus Mons.",
 		"question": "Why does Mars look red?",
@@ -90,6 +98,7 @@ const SCENES: Array = [
 	{
 		"name": "EARTH",
 		"title": "Earth Orbit — The Last Stand",
+		"accent": Color(0.86, 0.24, 0.28),
 		"story": "This is it — the alien armada has reached Earth. Hold the line, defender!",
 		"fact": "Earth's atmosphere and magnetic field protect us from space radiation every single day.",
 		"question": "What shields Earth from space radiation?",
@@ -125,3 +134,8 @@ static func wave(index: int) -> Dictionary:
 ## Display name for the HUD's scene indicator ("ISS", "MOON", …).
 static func scene_name(index: int) -> String:
 	return scene(index)["name"]
+
+
+## The scene's signature colour, for screens and backdrops to tint themselves.
+static func accent(index: int) -> Color:
+	return scene(index)["accent"]

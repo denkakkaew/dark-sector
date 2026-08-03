@@ -30,6 +30,16 @@ func test_every_scene_has_a_story_a_fact_and_a_three_answer_quiz() -> void:
 		assert_int(entry["correct"]).is_between(0, answers.size() - 1)
 
 
+func test_every_scene_has_its_own_accent_colour() -> void:
+	# The briefing and quiz tint themselves with it, and Phase 6's backdrops will
+	# too — two scenes sharing one would make them read as the same place.
+	var seen: Array = []
+	for i in range(1, CampaignData.count() + 1):
+		var accent := CampaignData.accent(i)
+		assert_bool(seen.has(accent)).is_false()
+		seen.append(accent)
+
+
 func test_every_wave_is_playable_and_can_pick_a_flight_mode() -> void:
 	for i in range(1, CampaignData.count() + 1):
 		var wave := CampaignData.wave(i)

@@ -26,6 +26,9 @@ const LEAK_DAMAGE: float = 20.0
 ## handicap, not a knockout). Used from Phase 7; defined here with the rest of
 ## the energy rules.
 const PARTIAL_ENERGY: float = 0.7
+## Score for getting a scene's quiz right — knowing the fact is worth about five
+## aliens, so the educational layer pays without outweighing the shooting.
+const QUIZ_BONUS: int = 500
 
 var score: int = 0
 var energy: float = MAX_ENERGY
@@ -120,6 +123,25 @@ func add_score(points: int) -> void:
 		return
 	score = maxi(0, score + points)
 	score_changed.emit(score)
+
+
+## The pre-battle quiz has been answered: bank the tally and charge the bar the
+## player is about to fight on.
+##
+## The whole rule lives here rather than in the quiz screen, so it is testable
+## without a UI and so there is one place to change if the quiz should stop
+## gating survival (grant a full bar either way and keep the reward score-only).
+##
+## Note there is no penalty beyond the smaller bar — a wrong answer costs no
+## score. The storyboard is firm that kids can't lose on the quiz, only learn.
+func record_quiz_answer(correct: bool) -> void:
+	quiz_total_count += 1
+	if correct:
+		quiz_correct_count += 1
+		add_score(QUIZ_BONUS)
+		set_energy(1.0)
+	else:
+		set_energy(PARTIAL_ENERGY)
 
 
 ## Charge the bar to a fraction of full — how the quiz sets starting energy.

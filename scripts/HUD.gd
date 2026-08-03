@@ -136,29 +136,31 @@ func _on_game_over() -> void:
 
 
 func _on_retry_pressed() -> void:
-	get_tree().paused = false
-	GameState.reset_campaign()
-	get_tree().reload_current_scene()
+	SceneRouter.start_campaign()
 
 
 func _on_scene_cleared(index: int, timed_out: bool) -> void:
 	var last_scene := GameState.campaign_complete()
-	_cleared_title.text = "CAMPAIGN COMPLETE" if last_scene else "SCENE %d CLEARED" % index
+	if last_scene:
+		# The storyboard's victory line, verbatim. Phase 8's Results screen takes
+		# this over, with the ranked board under it.
+		_cleared_title.text = "Yay!! We protected Earth!"
+		_continue_button.text = "PLAY AGAIN"
+	else:
+		_cleared_title.text = "SCENE %d CLEARED" % index
+		_continue_button.text = "NEXT MISSION"
 	# A scene that runs out of time still counts as held — the storyboard only
 	# ever loses a run on energy — but say so, or the card looks like a bug.
 	var lead := "Time up.  " if timed_out else ""
-	_cleared_summary.text = "%sSCORE %d   TIME %s" % [lead, GameState.score, GameState.time_text()]
-	_continue_button.text = "PLAY AGAIN" if last_scene else "NEXT SCENE"
+	_cleared_summary.text = "%sSCORE %d   TIME %s   QUIZ %d/%d" % [
+		lead, GameState.score, GameState.time_text(),
+		GameState.quiz_correct_count, GameState.quiz_total_count,
+	]
 	_cleared_panel.show()
 	_continue_button.grab_focus()
 	get_tree().paused = true
 
 
 func _on_continue_pressed() -> void:
-	get_tree().paused = false
-	# Phase 6/7 hand this to SceneRouter — cleared screen → briefing → quiz →
-	# next scene. Until those screens exist, the next scene is this one reloaded
-	# on the index GameState now holds; finishing scene 4 starts the campaign over.
-	if not GameState.advance_scene():
-		GameState.reset_campaign()
-	get_tree().reload_current_scene()
+	# The router decides what follows this scene, and unpauses on the way out.
+	SceneRouter.finish_scene()
