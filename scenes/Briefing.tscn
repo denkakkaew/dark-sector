@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/Briefing.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/SpaceBackdrop.tscn" id="3"]
 
 ; Border is recoloured to the scene's accent at runtime, so this is only the
 ; card's shape and its dark fill.
@@ -29,6 +30,10 @@ script = ExtResource("1")
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.035, 0.04, 0.07, 1)
+
+; Earth and its alien traffic, faint, over the flat dark base and under the
+; accent wash — so the screen is alive without the text having to fight it.
+[node name="SpaceBackdrop" parent="." instance=ExtResource("3")]
 
 ; Tinted to the scene's accent at runtime — the cheapest way to make the four
 ; missions read as four different places before Phase 6's backdrops exist.
