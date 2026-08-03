@@ -4,9 +4,9 @@ const ALIEN_SHIP_SCENE := preload("res://scenes/AlienShip.tscn")
 const AlienShip = preload("res://scripts/AlienShip.gd")
 const AIM_DISTANCE: float = 20.0
 
-@export var spawn_interval: float = 1.5
+## How far out the aliens are staged. Framing, not difficulty — the per-scene
+## difficulty knobs (count, cadence, speed, flight modes) come from CampaignData.
 @export var spawn_radius: float = 35.0
-@export var alien_speed: float = 8.0
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _turret = $Turret
@@ -16,11 +16,32 @@ const AIM_DISTANCE: float = 20.0
 var _reticle_screen_pos: Vector2
 var _spawn_timer: float = 0.0
 
+# The wave, read from CampaignData for whichever scene GameState is on.
+var _spawn_interval: float = 1.5
+var _alien_speed: float = 8.0
+var _mode_weights: Array = []
+## Aliens still to spawn. The scene is cleared when this and `_alive` are both 0.
+var _to_spawn: int = 0
+## Aliens in the air: spawned, not yet shot down and not yet through.
+var _alive: int = 0
+
 func _ready() -> void:
 	_reticle_screen_pos = get_viewport().get_visible_rect().size / 2.0
-	# Phase 5 hands the scene index to the router; until then this scene is
-	# always scene 1, and starting it here is what sets the HUD and timer going.
-	GameState.start_scene(1)
+	# The scene index is carried by GameState, so a reload after "continue" comes
+	# up as the next scene. Phase 7 has SceneRouter load this scene; until then
+	# starting it here is what sets the HUD, the wave and the timer going.
+	_load_wave(GameState.scene_index)
+	GameState.start_scene(GameState.scene_index)
+
+func _load_wave(scene_index: int) -> void:
+	var wave := CampaignData.wave(scene_index)
+	_spawn_interval = wave["interval"]
+	_alien_speed = wave["speed"]
+	_mode_weights = wave["mode_weights"]
+	_to_spawn = wave["count"]
+	_alive = 0
+	# First alien flies in on the beat, not the instant the scene opens.
+	_spawn_timer = _spawn_interval
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -35,13 +56,14 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_update_aim()
 	_reticle.reticle_pos = _reticle_screen_pos
-	# Once the run is over the field stops filling up; the aliens already in
-	# flight are frozen with the rest of the tree by the game-over card.
-	if not GameState.scene_running:
+	# Once the scene is over the field stops filling up; the aliens already in
+	# flight are frozen with the rest of the tree by the outcome card.
+	if not GameState.scene_running or _to_spawn <= 0:
 		return
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = spawn_interval
+		_spawn_timer = _spawn_interval
+		_to_spawn -= 1
 		_spawn_alien()
 
 func _update_aim() -> void:
@@ -51,15 +73,22 @@ func _update_aim() -> void:
 	_turret.aim_at(aim_point)
 
 func _pick_flight_mode() -> AlienShip.FlightMode:
-	var r := randf()
-	if r < 0.40:
+	"""Roll a flight mode against the scene's weights.
+
+	The weights are relative rather than normalised, so a scene's table can be
+	retuned by nudging one number without rebalancing the others.
+	"""
+	var total := 0.0
+	for weight in _mode_weights:
+		total += maxf(0.0, weight)
+	if total <= 0.0:
 		return AlienShip.FlightMode.DIRECT
-	elif r < 0.65:
-		return AlienShip.FlightMode.STRAFE
-	elif r < 0.85:
-		return AlienShip.FlightMode.WEAVE
-	else:
-		return AlienShip.FlightMode.SWOOP
+	var roll := randf() * total
+	for i in _mode_weights.size():
+		roll -= maxf(0.0, _mode_weights[i])
+		if roll <= 0.0:
+			return i as AlienShip.FlightMode
+	return AlienShip.FlightMode.DIRECT
 
 func _spawn_alien() -> void:
 	var alien: Area3D = ALIEN_SHIP_SCENE.instantiate()
@@ -120,15 +149,25 @@ func _spawn_alien() -> void:
 	# local it fell back to — moving Game or reparenting aliens would break it.
 	add_child(alien)
 	alien.global_position = spawn
-	alien.velocity = (target - spawn).normalized() * alien_speed
+	alien.velocity = (target - spawn).normalized() * _alien_speed
 	alien.destroyed.connect(_on_alien_destroyed)
 	alien.got_through.connect(_on_alien_got_through)
+	_alive += 1
 
 # The score itself is GameState's business; the popup needs the kill position,
 # which only this node ever sees — so the two are split here.
 func _on_alien_destroyed(world_position: Vector3, points: int) -> void:
 	GameState.add_score(points)
 	_hud.pop_score(world_position, points)
+	_resolve_alien()
 
 func _on_alien_got_through() -> void:
+	# Damage first: a leak that empties the bar ends the run, and a run that has
+	# ended must not then be reported as a scene cleared.
 	GameState.take_damage()
+	_resolve_alien()
+
+func _resolve_alien() -> void:
+	_alive -= 1
+	if _to_spawn <= 0 and _alive <= 0:
+		GameState.complete_scene()
