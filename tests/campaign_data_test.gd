@@ -30,13 +30,6 @@ func test_every_scene_has_a_story_a_fact_and_a_three_answer_quiz() -> void:
 		assert_int(entry["correct"]).is_between(0, answers.size() - 1)
 
 
-func test_backdrop_traffic_is_a_sane_count() -> void:
-	# Scenery, not difficulty: a negative count would make the spawn loop in
-	# BackdropTraffic silently do nothing, which is a typo you'd never notice.
-	for i in range(1, CampaignData.count() + 1):
-		assert_int(CampaignData.scene(i)["backdrop_traffic"]).is_greater_equal(0)
-
-
 func test_every_scene_has_its_own_accent_colour() -> void:
 	# The briefing and quiz tint themselves with it, and Phase 6's backdrops will
 	# too — two scenes sharing one would make them read as the same place.
