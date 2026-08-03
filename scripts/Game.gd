@@ -11,7 +11,6 @@ const AIM_DISTANCE: float = 20.0
 @onready var _camera: Camera3D = $Camera3D
 @onready var _turret = $Turret
 @onready var _reticle = $UI/Reticle
-@onready var _fire_button: Button = $UI/FireButton
 @onready var _hud = $UI/HUD
 
 var _reticle_screen_pos: Vector2
@@ -19,7 +18,6 @@ var _spawn_timer: float = 0.0
 
 func _ready() -> void:
 	_reticle_screen_pos = get_viewport().get_visible_rect().size / 2.0
-	_fire_button.pressed.connect(_turret.try_fire)
 	# Phase 5 hands the scene index to the router; until then this scene is
 	# always scene 1, and starting it here is what sets the HUD and timer going.
 	GameState.start_scene(1)

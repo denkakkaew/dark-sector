@@ -69,18 +69,6 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("3")
 
-[node name="FireButton" type="Button" parent="UI"]
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -200.0
-offset_right = -20.0
-offset_top = -140.0
-offset_bottom = -20.0
-focus_mode = 0
-text = "FIRE"
-
-; Last child of the layer, so the game-over card draws over the FIRE button and
-; the reticle rather than under them.
+; Last child of the layer, so the game-over card draws over the reticle rather
+; than under it.
 [node name="HUD" parent="UI" instance=ExtResource("6")]
