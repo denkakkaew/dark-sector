@@ -1,0 +1,153 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/HUD.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/EdgePulse.gd" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_energy_bg"]
+bg_color = Color(0.04, 0.05, 0.09, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.56, 0.75, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+; Recoloured at runtime by HUD.gd as energy drops, so this is only the full-bar
+; colour — the green end of the green-to-red ramp.
+[sub_resource type="StyleBoxFlat" id="StyleBox_energy_fill"]
+bg_color = Color(0.25, 0.92, 0.62, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_card"]
+content_margin_left = 44.0
+content_margin_top = 32.0
+content_margin_right = 44.0
+content_margin_bottom = 32.0
+bg_color = Color(0.06, 0.06, 0.1, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.22, 0.18, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="HUD" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="EdgePulse" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("2")
+
+[node name="TopBar" type="Control" parent="."]
+anchor_right = 1.0
+offset_left = 28.0
+offset_top = 16.0
+offset_right = -28.0
+offset_bottom = 56.0
+mouse_filter = 2
+
+[node name="EnergyGroup" type="HBoxContainer" parent="TopBar"]
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="EnergyLabel" type="Label" parent="TopBar/EnergyGroup"]
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+text = "ENERGY"
+vertical_alignment = 1
+
+[node name="EnergyBar" type="ProgressBar" parent="TopBar/EnergyGroup"]
+custom_minimum_size = Vector2(280, 22)
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBox_energy_bg")
+theme_override_styles/fill = SubResource("StyleBox_energy_fill")
+value = 100.0
+show_percentage = false
+
+[node name="CentreGroup" type="HBoxContainer" parent="TopBar"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 28
+
+[node name="SceneLabel" type="Label" parent="TopBar/CentreGroup"]
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+text = "SCENE 1·ISS"
+vertical_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="TopBar/CentreGroup"]
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+text = "0:00"
+vertical_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="TopBar"]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
+text = "SCORE 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Popups" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="GameOverPanel" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Dim" type="ColorRect" parent="GameOverPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Card" type="PanelContainer" parent="GameOverPanel"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Layout" type="VBoxContainer" parent="GameOverPanel/Card"]
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="GameOverPanel/Card/Layout"]
+theme_override_font_sizes/font_size = 52
+theme_override_colors/font_color = Color(1, 0.35, 0.28, 1)
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="FinalScore" type="Label" parent="GameOverPanel/Card/Layout"]
+theme_override_font_sizes/font_size = 26
+text = "SCORE 0   TIME 0:00"
+horizontal_alignment = 1
+
+[node name="RetryButton" type="Button" parent="GameOverPanel/Card/Layout"]
+custom_minimum_size = Vector2(260, 76)
+theme_override_font_sizes/font_size = 30
+text = "RETRY"
