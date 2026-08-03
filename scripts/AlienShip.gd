@@ -10,7 +10,16 @@ enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
 
 @export var speed: float = 8.0
 
+# How fast the hull swings onto a new heading, as a rate per second. Low enough
+# that the ship banks through a weave instead of snapping between angles, high
+# enough that it never looks like it is drifting sideways.
+const TURN_RESPONSE: float = 6.0
+
 var velocity: Vector3 = Vector3.ZERO
+# Smoothed heading the hull points along. Starts unset: the spawner assigns
+# `velocity` after the ship is in the tree, so the first real direction only
+# shows up on the first physics frame.
+var _facing: Vector3 = Vector3.ZERO
 var flight_mode: FlightMode = FlightMode.DIRECT
 var _destroyed: bool = false
 var _wobble_time: float = 0.0
@@ -31,6 +40,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _destroyed:
 		return
+	var previous := global_position
 	_wobble_time += delta
 	var wobble := Vector3(
 		sin(_wobble_time * 1.7) * _wobble_amp_x,
@@ -52,9 +62,32 @@ func _physics_process(delta: float) -> void:
 			var vertical := Vector3(0.0, sin(_wobble_time * _swoop_freq) * _swoop_amp, 0.0)
 			global_position += (velocity + wobble + vertical) * delta
 			global_position.y = maxf(global_position.y, 0.3)
+	_steer(global_position - previous, delta)
 	if global_position.z >= EARTH_Z:
 		reached_earth.emit()
 		queue_free()
+
+func _steer(step: Vector3, delta: float) -> void:
+	"""Point the hull along the way it actually moved this frame.
+
+	Taken from the travelled step rather than `velocity`, so the wobble and the
+	weave/swoop offsets steer the ship too — those are most of what a strafing
+	alien's heading is made of, and without them it would slide sideways while
+	staring straight ahead.
+	"""
+	if step.is_zero_approx():
+		return
+	var heading := step.normalized()
+	if _facing.is_zero_approx():
+		_facing = heading
+	else:
+		_facing = _facing.lerp(heading, minf(1.0, delta * TURN_RESPONSE)).normalized()
+	# look_at aims the node's -Z at its target and the saucer is modelled facing
+	# +Z, so it is given the point *behind* the ship to look at.
+	var up := Vector3.UP
+	if absf(_facing.dot(up)) > 0.99:
+		up = Vector3.BACK
+	look_at(global_position - _facing, up)
 
 func _on_area_entered(area: Area3D) -> void:
 	if _destroyed:
@@ -64,7 +97,7 @@ func _on_area_entered(area: Area3D) -> void:
 
 func _explode() -> void:
 	_destroyed = true
-	$MeshInstance3D.visible = false
+	$Model.visible = false
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position
