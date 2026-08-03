@@ -12,4 +12,8 @@
 run.log
 run-game.bat
 export-web.bat
-/planning/
+
+# Design sources, storyboards and raw model downloads (local only, ~1 GB).
+# Godot also skips this dir via planning/.gdignore, and the Web export
+# preset excludes it, so it never reaches docs/index.pck.
+planning/
