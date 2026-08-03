@@ -15,6 +15,9 @@ enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
 
 @export var speed: float = 8.0
 @export var score_value: int = 100
+## Laser hits this ship survives before the last one destroys it. 1 for a scout;
+## Mars' ore carrier is the armoured exception.
+@export var hit_points: int = 1
 
 # How fast the hull swings onto a new heading, as a rate per second. Low enough
 # that the ship banks through a weave instead of snapping between angles, high
@@ -28,6 +31,11 @@ var velocity: Vector3 = Vector3.ZERO
 var _facing: Vector3 = Vector3.ZERO
 var flight_mode: FlightMode = FlightMode.DIRECT
 var _destroyed: bool = false
+var _hits_taken: int = 0
+# The armour shell's authored strength, remembered so damage can fade it towards
+# nothing from whatever the scene set it to.
+var _armour_alpha: float = 0.0
+var _armour_glow: float = 0.0
 var _wobble_time: float = 0.0
 var _wobble_amp_x: float = 0.0
 var _wobble_amp_y: float = 0.0
@@ -42,6 +50,12 @@ func _ready() -> void:
 	_wobble_time = randf() * TAU
 	_wobble_amp_x = randf_range(0.4, 1.2)
 	_wobble_amp_y = randf_range(0.2, 0.7)
+	var armour := get_node_or_null("Armour") as MeshInstance3D
+	if armour != null:
+		var material := armour.get_surface_override_material(0) as StandardMaterial3D
+		if material != null:
+			_armour_alpha = material.albedo_color.a
+			_armour_glow = material.emission_energy_multiplier
 
 func _physics_process(delta: float) -> void:
 	if _destroyed:
@@ -99,7 +113,45 @@ func _on_area_entered(area: Area3D) -> void:
 	if _destroyed:
 		return
 	if area.is_in_group("lasers"):
+		take_hit()
+
+
+## Take one laser hit. Everything with a single hit point — every alien but the
+## ore carrier — goes straight through this to `_explode()`.
+func take_hit() -> void:
+	if _destroyed:
+		return
+	_hits_taken += 1
+	if _hits_taken >= hit_points:
 		_explode()
+		return
+	_show_armour_damage()
+
+
+func _show_armour_damage() -> void:
+	"""A hit the ship walked away from, made obvious.
+
+	Without this a carrier that takes three hits reads as three misses, and the
+	player stops shooting at the one target on the screen that is worth 400. The
+	shell fading step by step is the health bar — it says *keep going*, and it
+	says how much further, without putting a gauge on a 3D object.
+	"""
+	var effect := HIT_EFFECT_SCENE.instantiate()
+	get_parent().add_child(effect)
+	effect.global_position = global_position
+	effect.scale = Vector3.ONE * 0.5
+
+	var armour := get_node_or_null("Armour") as MeshInstance3D
+	if armour == null:
+		return
+	var material := armour.get_surface_override_material(0) as StandardMaterial3D
+	if material == null:
+		return
+	# The shell material is local to the scene (see OreCarrier.tscn), so this
+	# fades this one carrier and not every carrier on the field.
+	var remaining := float(hit_points - _hits_taken) / float(maxi(1, hit_points))
+	material.albedo_color.a = _armour_alpha * remaining
+	material.emission_energy_multiplier = _armour_glow * remaining
 
 func _explode() -> void:
 	_destroyed = true
@@ -107,6 +159,9 @@ func _explode() -> void:
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position
+	# A bigger ship goes up bigger. The carrier is the hardest kill on the field
+	# and the payoff should look like it.
+	effect.scale = Vector3.ONE * maxf(1.0, scale.x)
 	# Emitted before freeing, while global_position is still readable.
 	destroyed.emit(global_position, score_value)
 	queue_free()

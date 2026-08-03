@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/Game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Turret.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://assets/object/iss/iss_hull.glb" id="4"]
 [ext_resource type="Texture2D" path="res://assets/backdrop/space_earth.png" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="6"]
+[ext_resource type="Script" path="res://scripts/SceneLook.gd" id="7"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -25,6 +26,19 @@ shading_mode = 0
 albedo_color = Color(0.7, 0.7, 0.7, 1)
 albedo_texture = ExtResource("5")
 texture_filter = 4
+
+; Sized and placed to fill the frustum well behind everything else, on the same
+; 10° tilt as the Earth backdrop so the two agree about which way is "flat".
+; Only the scenes with a black sky ever switch it on.
+[sub_resource type="QuadMesh" id="QuadMesh_stars"]
+size = Vector2(460, 260)
+
+; The star texture itself is generated at runtime by SceneLook.gd — the density
+; is per scene. Nearest filtering keeps a star a point instead of a smudge.
+[sub_resource type="StandardMaterial3D" id="Material_stars"]
+transparency = 1
+shading_mode = 0
+texture_filter = 0
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1")
@@ -49,6 +63,29 @@ shadow_enabled = false
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
+
+; Turns the four destinations into four places: sky, lights, star field and the
+; planet bodies, all read from CampaignData's per-scene `look`. It reaches the
+; nodes it dresses through the exports below rather than owning them, so the
+; framing of the camera, lights and Earth backdrop stays authored here.
+; `node_paths` is what makes the four exports below resolve to nodes instead of
+; staying null: without it the paths are stored but never handed to the script.
+[node name="SceneLook" type="Node3D" parent="." node_paths=PackedStringArray("world_environment", "sun", "fill", "earth_image")]
+script = ExtResource("7")
+world_environment = NodePath("../WorldEnvironment")
+sun = NodePath("../DirectionalLight3D")
+fill = NodePath("../FillLight")
+earth_image = NodePath("../Backdrop")
+
+; Planet bodies are added here at runtime, and cleared on the next scene.
+[node name="Bodies" type="Node3D" parent="SceneLook"]
+
+[node name="Stars" type="MeshInstance3D" parent="SceneLook"]
+transform = Transform3D(1, 0, 0, 0, 0.9848078, 0.1736482, 0, -0.1736482, 0.9848078, 0, -22.4, -140)
+visible = false
+mesh = SubResource("QuadMesh_stars")
+surface_material_override/0 = SubResource("Material_stars")
+cast_shadow = 0
 
 [node name="Backdrop" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.9848078, 0.1736482, 0, -0.1736482, 0.9848078, 0, -6.219, -48.088)

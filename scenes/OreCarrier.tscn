@@ -1,0 +1,48 @@
+[gd_scene load_steps=4 format=3]
+
+; Mars' armoured ore carrier: the same saucer, inherited so it keeps every fix
+; the scout gets, with the trade the storyboard asks for — slow and tough, worth
+; four ordinary kills. The numbers themselves live in CampaignData.ORE_CARRIER
+; and are applied by the spawner; what is authored here is the look.
+
+[ext_resource type="PackedScene" path="res://scenes/AlienShip.tscn" id="1"]
+
+; A saucer-shaped bubble around the hull: the armour, and the reason a carrier
+; is picked out of a wave at a glance. Unshaded so it glows evenly from every
+; angle instead of turning into a dark ball on its night side.
+;
+; `resource_local_to_scene` is the important line. Without it every carrier on
+; the field shares one material, and damaging one fades all three.
+[sub_resource type="StandardMaterial3D" id="Material_armour"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.62, 0.2, 0.3)
+emission_enabled = true
+emission = Color(1, 0.6, 0.18, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_armour"]
+radius = 1.15
+height = 2.3
+radial_segments = 24
+rings = 12
+
+; Armour, score and size are set by the spawner from CampaignData.ORE_CARRIER,
+; so this scene carries the look and the table carries the balance.
+[node name="OreCarrier" instance=ExtResource("1")]
+
+[node name="Armour" type="MeshInstance3D" parent="."]
+; Squashed to the saucer's proportions, so the shell hugs the hull rather than
+; swallowing it in a sphere.
+transform = Transform3D(1, 0, 0, 0, 0.62, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("SphereMesh_armour")
+surface_material_override/0 = SubResource("Material_armour")
+cast_shadow = 0
+
+; Carriers arrive from far out at the back of a wave; this is what makes one
+; readable as an incoming threat while it is still small.
+[node name="Glow" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.62, 0.22, 1)
+light_energy = 1.6
+omni_range = 5.0
