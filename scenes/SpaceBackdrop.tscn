@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/SpaceBackdrop.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/backdrop/space_earth.png" id="2"]
+
+; Shared by the briefing and the quiz. Sits behind their text, so everything
+; here is deliberately faint — the script sets the final opacities.
+[node name="SpaceBackdrop" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Image" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+
+; The ships are added here at runtime. Kept as its own node so they always draw
+; over the Earth and under whatever the screen puts on top.
+[node name="Traffic" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2

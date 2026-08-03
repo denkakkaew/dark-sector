@@ -13,6 +13,10 @@ const POPUP_COLOR := Color(1.0, 0.87, 0.35)
 ## dangerous, so the player reads trouble without having to measure the bar.
 const ENERGY_FULL_COLOR := Color(0.25, 0.92, 0.62)
 const ENERGY_LOW_COLOR := Color(0.95, 0.24, 0.2)
+## Clock colours: normal, and the warning it turns at TIMER_WARNING_SECONDS.
+const TIMER_COLOR := Color(0.8, 0.9, 1.0)
+const TIMER_WARNING_COLOR := Color(1.0, 0.62, 0.28)
+const TIMER_WARNING_SECONDS: float = 10.0
 
 @onready var _energy_bar: ProgressBar = $TopBar/EnergyGroup/EnergyBar
 @onready var _scene_label: Label = $TopBar/CentreGroup/SceneLabel
@@ -23,6 +27,10 @@ const ENERGY_LOW_COLOR := Color(0.95, 0.24, 0.2)
 @onready var _game_over_panel: Control = $GameOverPanel
 @onready var _final_score_label: Label = $GameOverPanel/Card/Layout/FinalScore
 @onready var _retry_button: Button = $GameOverPanel/Card/Layout/RetryButton
+@onready var _cleared_panel: Control = $SceneClearedPanel
+@onready var _cleared_title: Label = $SceneClearedPanel/Card/Layout/Title
+@onready var _cleared_summary: Label = $SceneClearedPanel/Card/Layout/Summary
+@onready var _continue_button: Button = $SceneClearedPanel/Card/Layout/ContinueButton
 
 var _fill_style: StyleBoxFlat
 var _bar_tween: Tween
@@ -32,6 +40,7 @@ func _ready() -> void:
 	# The game-over card has to stay clickable after it pauses the tree.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_game_over_panel.hide()
+	_cleared_panel.hide()
 
 	# Own copy of the fill box, so recolouring the bar doesn't leak into any
 	# other ProgressBar that shares the theme.
@@ -43,7 +52,9 @@ func _ready() -> void:
 	GameState.damage_taken.connect(_on_damage_taken)
 	GameState.game_over.connect(_on_game_over)
 	GameState.scene_started.connect(_on_scene_started)
+	GameState.scene_cleared.connect(_on_scene_cleared)
 	_retry_button.pressed.connect(_on_retry_pressed)
+	_continue_button.pressed.connect(_on_continue_pressed)
 
 	_on_score_changed(GameState.score)
 	_on_energy_changed(GameState.energy, GameState.MAX_ENERGY)
@@ -51,7 +62,13 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	_timer_label.text = GameState.time_text()
+	# The clock counts the scene down, not the campaign up — the campaign total
+	# belongs to the end-of-run cards, where there is room to read it.
+	_timer_label.text = GameState.scene_time_text()
+	var warning := GameState.scene_time_left <= TIMER_WARNING_SECONDS
+	_timer_label.add_theme_color_override(
+		"font_color", TIMER_WARNING_COLOR if warning else TIMER_COLOR
+	)
 
 
 ## Float a "+points" label up from where an alien died (storyboard beat 5a).
@@ -119,6 +136,31 @@ func _on_game_over() -> void:
 
 
 func _on_retry_pressed() -> void:
-	get_tree().paused = false
-	GameState.reset_campaign()
-	get_tree().reload_current_scene()
+	SceneRouter.start_campaign()
+
+
+func _on_scene_cleared(index: int, timed_out: bool) -> void:
+	var last_scene := GameState.campaign_complete()
+	if last_scene:
+		# The storyboard's victory line, verbatim. Phase 8's Results screen takes
+		# this over, with the ranked board under it.
+		_cleared_title.text = "Yay!! We protected Earth!"
+		_continue_button.text = "PLAY AGAIN"
+	else:
+		_cleared_title.text = "SCENE %d CLEARED" % index
+		_continue_button.text = "NEXT MISSION"
+	# A scene that runs out of time still counts as held — the storyboard only
+	# ever loses a run on energy — but say so, or the card looks like a bug.
+	var lead := "Time up.  " if timed_out else ""
+	_cleared_summary.text = "%sSCORE %d   TIME %s   QUIZ %d/%d" % [
+		lead, GameState.score, GameState.time_text(),
+		GameState.quiz_correct_count, GameState.quiz_total_count,
+	]
+	_cleared_panel.show()
+	_continue_button.grab_focus()
+	get_tree().paused = true
+
+
+func _on_continue_pressed() -> void:
+	# The router decides what follows this scene, and unpauses on the way out.
+	SceneRouter.finish_scene()

@@ -1,0 +1,171 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/Quiz.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/SpaceBackdrop.tscn" id="2"]
+
+; The answer buttons need a solid plate of their own. The default theme button
+; is translucent, and with Earth behind it the bright limb came through and made
+; the answers hard to read.
+[sub_resource type="StyleBoxFlat" id="StyleBox_answer"]
+bg_color = Color(0.07, 0.09, 0.14, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.45, 0.62, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_answer_hover"]
+bg_color = Color(0.12, 0.16, 0.24, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.7, 0.95, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_energy_bg"]
+bg_color = Color(0.04, 0.05, 0.09, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.42, 0.56, 0.75, 0.9)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_energy_fill"]
+bg_color = Color(0.25, 0.92, 0.62, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="Quiz" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.035, 0.04, 0.07, 1)
+
+; Same faint Earth and traffic as the briefing, so the two screens read as one
+; place. The quiz carries more text, so if either needs knocking back further
+; it is this one.
+[node name="SpaceBackdrop" parent="." instance=ExtResource("2")]
+
+[node name="AccentWash" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.24, 0.55, 0.9, 0.1)
+
+[node name="Layout" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 90
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 90
+theme_override_constants/margin_bottom = 24
+
+; Sizes below are tuned so the whole column — question, three answers, feedback,
+; energy bar and countdown — fits 648px. It did not before: the bar was clipped
+; by the bottom edge and the 3·2·1 never appeared on screen at all.
+[node name="Column" type="VBoxContainer" parent="Layout"]
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="Heading" type="Label" parent="Layout/Column"]
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
+text = "MISSION QUIZ"
+horizontal_alignment = 1
+
+[node name="Question" type="Label" parent="Layout/Column"]
+custom_minimum_size = Vector2(900, 0)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+text = "Why does Mars look red?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap" type="Control" parent="Layout/Column"]
+custom_minimum_size = Vector2(0, 6)
+
+[node name="Answers" type="VBoxContainer" parent="Layout/Column"]
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="AnswerA" type="Button" parent="Layout/Column/Answers"]
+custom_minimum_size = Vector2(900, 76)
+theme_override_styles/normal = SubResource("StyleBox_answer")
+theme_override_styles/hover = SubResource("StyleBox_answer_hover")
+theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
+theme_override_styles/focus = SubResource("StyleBox_answer_hover")
+theme_override_font_sizes/font_size = 28
+text = "A"
+
+[node name="AnswerB" type="Button" parent="Layout/Column/Answers"]
+custom_minimum_size = Vector2(900, 76)
+theme_override_styles/normal = SubResource("StyleBox_answer")
+theme_override_styles/hover = SubResource("StyleBox_answer_hover")
+theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
+theme_override_styles/focus = SubResource("StyleBox_answer_hover")
+theme_override_font_sizes/font_size = 28
+text = "B"
+
+[node name="AnswerC" type="Button" parent="Layout/Column/Answers"]
+custom_minimum_size = Vector2(900, 76)
+theme_override_styles/normal = SubResource("StyleBox_answer")
+theme_override_styles/hover = SubResource("StyleBox_answer_hover")
+theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
+theme_override_styles/focus = SubResource("StyleBox_answer_hover")
+theme_override_font_sizes/font_size = 28
+text = "C"
+
+; Blank but present from the start, so the answer buttons don't jump when
+; feedback appears under them.
+[node name="Feedback" type="Label" parent="Layout/Column"]
+custom_minimum_size = Vector2(900, 48)
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 26
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="EnergyRow" type="HBoxContainer" parent="Layout/Column"]
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+
+[node name="EnergyLabel" type="Label" parent="Layout/Column/EnergyRow"]
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
+text = "ENERGY"
+vertical_alignment = 1
+
+[node name="EnergyBar" type="ProgressBar" parent="Layout/Column/EnergyRow"]
+custom_minimum_size = Vector2(420, 26)
+size_flags_vertical = 4
+theme_override_styles/background = SubResource("StyleBox_energy_bg")
+theme_override_styles/fill = SubResource("StyleBox_energy_fill")
+value = 0.0
+show_percentage = false
+
+[node name="Countdown" type="Label" parent="Layout/Column"]
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 38
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
