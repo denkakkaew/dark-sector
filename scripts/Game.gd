@@ -10,8 +10,9 @@ const AIM_DISTANCE: float = 20.0
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _turret = $Turret
-@onready var _reticle = $HUD/Reticle
-@onready var _fire_button: Button = $HUD/FireButton
+@onready var _reticle = $UI/Reticle
+@onready var _fire_button: Button = $UI/FireButton
+@onready var _hud = $UI/HUD
 
 var _reticle_screen_pos: Vector2
 var _spawn_timer: float = 0.0
@@ -19,6 +20,9 @@ var _spawn_timer: float = 0.0
 func _ready() -> void:
 	_reticle_screen_pos = get_viewport().get_visible_rect().size / 2.0
 	_fire_button.pressed.connect(_turret.try_fire)
+	# Phase 5 hands the scene index to the router; until then this scene is
+	# always scene 1, and starting it here is what sets the HUD and timer going.
+	GameState.start_scene(1)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -33,6 +37,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_update_aim()
 	_reticle.reticle_pos = _reticle_screen_pos
+	# Once the run is over the field stops filling up; the aliens already in
+	# flight are frozen with the rest of the tree by the game-over card.
+	if not GameState.scene_running:
+		return
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = spawn_interval
@@ -115,3 +123,14 @@ func _spawn_alien() -> void:
 	add_child(alien)
 	alien.global_position = spawn
 	alien.velocity = (target - spawn).normalized() * alien_speed
+	alien.destroyed.connect(_on_alien_destroyed)
+	alien.got_through.connect(_on_alien_got_through)
+
+# The score itself is GameState's business; the popup needs the kill position,
+# which only this node ever sees — so the two are split here.
+func _on_alien_destroyed(world_position: Vector3, points: int) -> void:
+	GameState.add_score(points)
+	_hud.pop_score(world_position, points)
+
+func _on_alien_got_through() -> void:
+	GameState.take_damage()

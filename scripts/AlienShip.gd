@@ -1,7 +1,12 @@
 extends Area3D
 class_name AlienShip
 
-signal reached_earth
+# Shot down: carries where it died so the HUD can float the points there.
+signal destroyed(world_position: Vector3, points: int)
+# Crossed the line the player is defending. Named for what it costs rather than
+# where it happens: in scenes 1–3 "getting through" is reaching the station, the
+# base site, or escaping with ore — only scene 4 is literally reaching Earth.
+signal got_through
 
 const HIT_EFFECT_SCENE := preload("res://scenes/HitEffect.tscn")
 const EARTH_Z: float = 9.0
@@ -9,6 +14,7 @@ const EARTH_Z: float = 9.0
 enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
 
 @export var speed: float = 8.0
+@export var score_value: int = 100
 
 # How fast the hull swings onto a new heading, as a rate per second. Low enough
 # that the ship banks through a weave instead of snapping between angles, high
@@ -64,7 +70,7 @@ func _physics_process(delta: float) -> void:
 			global_position.y = maxf(global_position.y, 0.3)
 	_steer(global_position - previous, delta)
 	if global_position.z >= EARTH_Z:
-		reached_earth.emit()
+		got_through.emit()
 		queue_free()
 
 func _steer(step: Vector3, delta: float) -> void:
@@ -101,4 +107,6 @@ func _explode() -> void:
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position
+	# Emitted before freeing, while global_position is still readable.
+	destroyed.emit(global_position, score_value)
 	queue_free()

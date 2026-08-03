@@ -19,6 +19,12 @@ config/icon="res://icon.svg"
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
+[autoload]
+
+; Cross-scene state (score, energy, quiz tally, run timer). Autoloaded so it
+; survives the scene reload behind the game-over Retry button.
+GameState="*res://autoload/GameState.gd"
+
 [display]
 
 ; The whole scene is composed for one fixed 16:9 landscape screen — the turret's
