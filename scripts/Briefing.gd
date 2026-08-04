@@ -50,9 +50,13 @@ func _ready() -> void:
 	# focused Button, which keeps the dev loop quick without a second code path.
 	_continue_button.grab_focus()
 
+	# The hint belongs to the dev jump below and goes wherever it goes.
+	$DevHint.visible = OS.is_debug_build()
+
 
 func _unhandled_input(event: InputEvent) -> void:
-	_handle_debug_jump(event)
+	if OS.is_debug_build():
+		_handle_debug_jump(event)
 
 
 func _advance() -> void:
@@ -65,8 +69,13 @@ func _advance() -> void:
 ## DEV ONLY — number keys jump straight to a scene's briefing.
 ##
 ## Reaching scene 4 otherwise means playing three scenes first, which makes
-## tuning the later spawn tables impractical. Delete this, the `DevHint` label
-## and its call above before the kiosk build.
+## tuning the later spawn tables impractical.
+##
+## Phase 9 was meant to delete this before the kiosk build. Gating it on
+## `OS.is_debug_build()` instead does the same job and survives: a release export
+## — which is what the kiosk and the web build are — has neither the keys nor the
+## hint label, while the editor and `godot --path .` keep both. Deleting it would
+## only have meant writing it again the next time a spawn table needs tuning.
 func _handle_debug_jump(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return

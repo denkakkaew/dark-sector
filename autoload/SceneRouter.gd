@@ -96,6 +96,11 @@ func _go_to(scene_path: String) -> void:
 	# screen loading into a still-paused tree is a dead screen: nothing
 	# processes, no button responds, and it looks like a hang rather than a bug.
 	get_tree().paused = false
+	# Music is a function of where the player is, and this is the file that knows
+	# that. `play_music` ignores a request for the bed already playing, so the
+	# menu loop runs unbroken across briefing → quiz → cleared → briefing and
+	# only cross-fades on the way into and out of a battle.
+	Audio.play_music(Audio.bed_for_scene(scene_path))
 	# Deferred because callers are typically button handlers or signal callbacks,
 	# and changing scene from inside one frees the node that is mid-emit.
 	get_tree().call_deferred("change_scene_to_file", scene_path)

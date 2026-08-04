@@ -30,6 +30,12 @@ GameState="*res://autoload/GameState.gd"
 Leaderboard="*res://autoload/Leaderboard.gd"
 ; Owns every screen transition. Loaded last because it drives both of the above.
 SceneRouter="*res://autoload/SceneRouter.gd"
+; Sound. After the router only because nothing above it makes noise; it reads no
+; other autoload.
+Audio="*res://autoload/Audio.gd"
+; Takes an abandoned kiosk back to the attract screen. Last, because resetting
+; means driving GameState and SceneRouter both.
+IdleWatch="*res://autoload/IdleWatch.gd"
 
 [display]
 

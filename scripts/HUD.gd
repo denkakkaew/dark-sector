@@ -117,6 +117,10 @@ func _on_energy_changed(energy: float, max_energy: float) -> void:
 
 
 func _on_damage_taken(_amount: float) -> void:
+	# Loud on purpose. This is the only thing in the game that costs the player
+	# anything, and it happens off at the edge of the screen where an alien
+	# crossed the line — often while they are looking somewhere else entirely.
+	Audio.play("leak", 1.0)
 	_edge_pulse.pulse()
 	var flash := create_tween()
 	flash.tween_property(_energy_bar, "modulate", Color(1.8, 0.5, 0.45), 0.06)
@@ -134,6 +138,10 @@ func _on_game_over() -> void:
 		GameState.scene_index, GameState.scene_name(),
 		GameState.score, GameState.time_text(),
 	]
+	# Off the battle bed and back to the calm one: the shooting is over, and the
+	# card is a screen to read rather than a moment of pressure.
+	Audio.play_music("menu")
+	Audio.play("game_over")
 	_game_over_panel.show()
 	_retry_button.grab_focus()
 	# Freezes the battle behind the card; this node is PROCESS_MODE_ALWAYS.
@@ -149,6 +157,10 @@ func _on_retry_pressed() -> void:
 
 func _on_scene_cleared(index: int, timed_out: bool) -> void:
 	var last_scene := GameState.campaign_complete()
+	Audio.play_music("menu")
+	# Two different cues, because these are two different sizes of moment: one
+	# mission down out of four, or the whole campaign held.
+	Audio.play("victory" if last_scene else "scene_cleared")
 	if last_scene:
 		# Storyboard screen 7, and its win line verbatim. The card stays the place
 		# the win is announced; CONTINUE hands off to the router, which records
