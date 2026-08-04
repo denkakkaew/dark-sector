@@ -68,6 +68,10 @@ func _on_answer_pressed(chosen: int) -> void:
 	_answered = true
 	var correct := chosen == _correct_index
 	GameState.record_quiz_answer(correct)
+	# A rising arpeggio, or a soft two-note shrug. The wrong-answer cue is
+	# deliberately not a buzzer: the storyboard is firm that a kid cannot lose
+	# here, and a buzzer is the sound of being told off.
+	Audio.play("quiz_correct" if correct else "quiz_wrong", 1.0)
 
 	_mark_answers(chosen, correct)
 	_feedback.add_theme_color_override("font_color", CORRECT_COLOR if correct else WRONG_COLOR)
@@ -108,6 +112,7 @@ func _run_countdown() -> void:
 	_skippable = true
 	for n in [3, 2, 1]:
 		_countdown.text = "%d" % n
+		Audio.play("countdown")
 		await get_tree().create_timer(COUNTDOWN_STEP).timeout
 		# A tap during the countdown launches early and frees this screen; the
 		# awaits above would otherwise carry on touching freed nodes.
@@ -121,4 +126,5 @@ func _launch() -> void:
 	if not _skippable:
 		return
 	_skippable = false
+	Audio.play("launch")
 	SceneRouter.start_battle()

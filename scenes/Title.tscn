@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/Title.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/SpaceBackdrop.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/AttractBackdrop.gd" id="3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_start"]
 content_margin_left = 40.0
@@ -29,10 +30,45 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.025, 0.03, 0.055, 1)
 
+; Storyboard screen 1's attract mode: photographs of the four destinations,
+; cross-fading. Above the flat backdrop and below the alien traffic, so the
+; ships drift across whichever world is currently up.
+[node name="Attract" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("3")
+
+[node name="Caption" type="Label" parent="Attract"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 62.0
+offset_top = -132.0
+offset_right = 560.0
+offset_bottom = -106.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.62, 0.7, 0.84, 1)
+text = "MISSION 1 OF 4"
+
+[node name="Destination" type="Label" parent="Attract/Caption"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_outline_color = Color(0.02, 0.03, 0.06, 0.9)
+theme_override_constants/outline_size = 6
+text = "ISS"
+
 ; The same Earth-and-alien-traffic backdrop the briefing and quiz use, so the
 ; kiosk's first screen already shows what the game is about — and so an idle
-; screen has something moving on it.
+; screen has something moving on it. Its own Earth photograph is turned off
+; here: the attract cycle above is already showing a world, and two of them
+; stacked read as fog.
 [node name="SpaceBackdrop" parent="." instance=ExtResource("2")]
+image_opacity = 0.0
 
 [node name="Layout" type="MarginContainer" parent="."]
 anchor_right = 1.0

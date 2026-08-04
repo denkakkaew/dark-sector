@@ -5,6 +5,21 @@ const ORE_CARRIER_SCENE := preload("res://scenes/OreCarrier.tscn")
 const AlienShip = preload("res://scripts/AlienShip.gd")
 const AIM_DISTANCE: float = 20.0
 
+# Screen shake. Small numbers on purpose: the camera is the frame the whole
+# scene is composed in — the turret's silhouette, the station plate across the
+# bottom corners — and anything big enough to be *noticed* as a shake is big
+# enough to break that composition. It should be felt and not seen.
+const SHAKE_DECAY: float = 2.6
+## Metres of camera travel at full strength.
+const SHAKE_OFFSET: float = 0.16
+## Degrees of roll at full strength.
+const SHAKE_ROLL: float = 0.9
+## Per-event strengths, 0–1. A leak shakes hardest: it is the only one of the
+## three that costs the player something.
+const SHAKE_KILL: float = 0.16
+const SHAKE_CARRIER: float = 0.45
+const SHAKE_LEAK: float = 0.6
+
 ## How far out the aliens are staged. Framing, not difficulty — the per-scene
 ## difficulty knobs (count, cadence, speed, flight modes) come from CampaignData.
 @export var spawn_radius: float = 35.0
@@ -17,6 +32,12 @@ const AIM_DISTANCE: float = 20.0
 
 var _reticle_screen_pos: Vector2
 var _spawn_timer: float = 0.0
+## A finger (or the left mouse button) is down: fire for as long as it is.
+var _pointer_held: bool = false
+## Current shake strength, 0–1, decaying to nothing.
+var _shake: float = 0.0
+## The camera's authored transform — where it goes back to between shakes.
+var _camera_rest: Transform3D
 
 # The wave, read from CampaignData for whichever scene GameState is on.
 var _spawn_interval: float = 1.5
@@ -32,6 +53,14 @@ var _spawn_plan: Array = []
 
 func _ready() -> void:
 	_reticle_screen_pos = get_viewport().get_visible_rect().size / 2.0
+	_camera_rest = _camera.transform
+	# A leak is felt here as well as shown on the HUD's bar and edge pulse. The
+	# HUD owns the two on-screen tells; the camera is this node's to move.
+	GameState.damage_taken.connect(func(_amount: float) -> void: shake(SHAKE_LEAK))
+	# Both ways a scene ends pause the tree behind a card, which would strand the
+	# camera wherever the last shake left it.
+	GameState.game_over.connect(_settle_camera)
+	GameState.scene_cleared.connect(func(_i: int, _t: bool) -> void: _settle_camera())
 	# The scene index is carried by GameState, so a reload after "continue" comes
 	# up as the next scene. Phase 7 has SceneRouter load this scene; until then
 	# starting it here is what sets the HUD, the wave and the timer going.
@@ -51,18 +80,30 @@ func _load_wave(scene_index: int) -> void:
 	_spawn_timer = _spawn_interval
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Aiming and firing are the same gesture on a touchscreen: you put your
+	# finger where you want to shoot. Until Phase 9 the only way to fire was the
+	# spacebar — there is no FIRE button any more — so the kiosk this is built
+	# for could aim but not shoot at all.
 	if event is InputEventMouseMotion:
 		_reticle_screen_pos = event.position
 	elif event is InputEventScreenDrag:
 		_reticle_screen_pos = event.position
-	elif event is InputEventScreenTouch and event.pressed:
+	elif event is InputEventScreenTouch:
 		_reticle_screen_pos = event.position
-	elif event.is_action_pressed("fire"):
-		_turret.try_fire()
+		_pointer_held = event.pressed
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_reticle_screen_pos = event.position
+		_pointer_held = event.pressed
 
 func _process(delta: float) -> void:
 	_update_aim()
 	_reticle.reticle_pos = _reticle_screen_pos
+	# Held rather than tapped: a wave is twenty-odd ships and asking an 8-year-old
+	# to tap once per shot turns the game into a tapping contest. `try_fire()`
+	# enforces the cooldown, so holding down is a rate limit, not a cheat.
+	if _pointer_held or Input.is_action_pressed("fire"):
+		_turret.try_fire()
+	_apply_shake(delta)
 	# Once the scene is over the field stops filling up; the aliens already in
 	# flight are frozen with the rest of the tree by the outcome card.
 	if not GameState.scene_running or _to_spawn <= 0:
@@ -75,6 +116,40 @@ func _process(delta: float) -> void:
 		var slot := _spawn_plan.size() - _to_spawn
 		_to_spawn -= 1
 		_spawn_alien(slot < _spawn_plan.size() and _spawn_plan[slot])
+
+## Knock the camera, 0–1. Repeated knocks add rather than restart, so three
+## kills in a second build instead of each one cutting the last one short.
+func shake(amount: float) -> void:
+	_shake = minf(1.0, _shake + amount)
+
+
+func _apply_shake(delta: float) -> void:
+	if _shake <= 0.0:
+		return
+	_shake = maxf(0.0, _shake - SHAKE_DECAY * delta)
+	# Squared, so the knock is sharp at the front and the tail is short. A linear
+	# decay reads as the camera being loose on its mount.
+	var strength := _shake * _shake
+	var offset := Vector3(
+		randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), 0.0
+	) * SHAKE_OFFSET * strength
+	var transform := _camera_rest
+	transform.origin += _camera_rest.basis * offset
+	transform.basis = _camera_rest.basis * Basis(
+		Vector3.BACK, deg_to_rad(randf_range(-1.0, 1.0) * SHAKE_ROLL * strength)
+	)
+	_camera.transform = transform
+	if _shake <= 0.0:
+		_settle_camera()
+
+
+## Back to the authored framing exactly, rather than to whatever the last random
+## offset happened to be — the aim ray is cast through this camera, so a camera
+## left a few centimetres off would leave a permanent aiming bias behind it.
+func _settle_camera() -> void:
+	_shake = 0.0
+	_camera.transform = _camera_rest
+
 
 func _update_aim() -> void:
 	var ray_origin := _camera.project_ray_origin(_reticle_screen_pos)
@@ -177,6 +252,10 @@ func _spawn_alien(ore_carrier: bool = false) -> void:
 func _on_alien_destroyed(world_position: Vector3, points: int) -> void:
 	GameState.add_score(points)
 	_hud.pop_score(world_position, points)
+	# The carrier is the biggest thing on the field and the hardest kill in the
+	# campaign; it is worth more points and it should land heavier. Read off the
+	# payout so the two stay tied to the same table entry.
+	shake(SHAKE_CARRIER if points >= CampaignData.ORE_CARRIER["score"] else SHAKE_KILL)
 	_resolve_alien()
 
 func _on_alien_got_through() -> void:

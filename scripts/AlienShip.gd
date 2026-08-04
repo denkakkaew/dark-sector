@@ -135,7 +135,11 @@ func _show_armour_damage() -> void:
 	player stops shooting at the one target on the screen that is worth 400. The
 	shell fading step by step is the health bar — it says *keep going*, and it
 	says how much further, without putting a gauge on a 3D object.
+
+	The sound says the same thing: a metallic ring rather than an explosion, so
+	the ear also hears a hit that did not finish the job.
 	"""
+	Audio.play("armour_hit", -3.0, 0.06)
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position
@@ -156,6 +160,10 @@ func _show_armour_damage() -> void:
 func _explode() -> void:
 	_destroyed = true
 	$Model.visible = false
+	# An armoured ship goes up with the heavier sample, matched to the bigger
+	# particle burst below. `hit_points` rather than `scale`, because armour is
+	# what makes a carrier a carrier — a scout scaled up is still a scout.
+	Audio.play("carrier_explode" if hit_points > 1 else "alien_explode", -1.0, 0.07)
 	var effect := HIT_EFFECT_SCENE.instantiate()
 	get_parent().add_child(effect)
 	effect.global_position = global_position

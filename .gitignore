@@ -5,6 +5,11 @@
 # gdUnit4 generated test reports
 /reports/
 
+# Windows export output. A ~140 MB self-contained .exe (the engine template is
+# 105 MB of that) — built on demand, never committed. The web build under docs/
+# is the exception: GitHub Pages serves it straight out of the repository.
+/build/
+
 # Local Claude Code settings (machine-specific)
 .claude/settings.local.json
 

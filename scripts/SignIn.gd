@@ -59,11 +59,15 @@ func _make_key(label: String, width_scale: float = 1.0) -> Button:
 	# Never take focus: the field has to keep the caret so a hardware keyboard
 	# and the on-screen one can be used in the same sitting.
 	key.focus_mode = Control.FOCUS_NONE
+	# Out of the automatic button click and onto a quieter, shorter one. A name
+	# is thirty taps; at the volume of a menu button that is a drum solo.
+	key.add_to_group(Audio.NO_CLICK_GROUP)
 	key.pressed.connect(_on_key_pressed.bind(label))
 	return key
 
 
 func _on_key_pressed(label: String) -> void:
+	Audio.play("ui_key", -6.0, 0.05)
 	if label == BACKSPACE:
 		_name_field.text = _name_field.text.substr(0, maxi(0, _name_field.text.length() - 1))
 	elif _name_field.text.length() < Leaderboard.NAME_LIMIT:

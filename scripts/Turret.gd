@@ -36,6 +36,9 @@ func try_fire() -> void:
 	if _fire_cooldown_remaining > 0.0:
 		return
 	_fire_cooldown_remaining = fire_cooldown
+	# Jittered, because at a 0.2 s cooldown this is five identical samples a
+	# second and identical is what makes a repeated sound read as a glitch.
+	Audio.play("laser", -4.0, 0.09)
 	_apply_aim_assist()
 	var laser: Area3D = LASER_SCENE.instantiate()
 	get_parent().add_child(laser)
