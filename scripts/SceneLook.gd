@@ -23,12 +23,19 @@ const STAR_TEXTURE_SIZE: int = 512
 const STAR_COUNT: int = 900
 const MOTTLE_TEXTURE_SIZE: int = 256
 
+## Width of the painted backdrop quad, in metres. Hand-tuned in `Game.tscn` to
+## cover the frustum at the depth it hangs at, so it is the dimension we keep
+## fixed and the height that follows the image — a backdrop narrower than this
+## would show the sky down its sides.
+const PHOTO_WIDTH: float = 164.97
+
 @export var world_environment: WorldEnvironment
 @export var sun: DirectionalLight3D
 @export var fill: DirectionalLight3D
-## The photographic Earth backdrop authored in `Game.tscn`. Only its visibility
-## and tint are ours; its framing was hand-tuned and is left alone.
-@export var earth_image: MeshInstance3D
+## The painted backdrop authored in `Game.tscn`. Which image hangs on it, its
+## tint and its visibility are ours; its placement was hand-tuned and is left
+## alone.
+@export var photo: MeshInstance3D
 
 @onready var _bodies: Node3D = $Bodies
 @onready var _stars: MeshInstance3D = $Stars
@@ -40,7 +47,7 @@ func apply(scene_index: int) -> void:
 	var look := CampaignData.look(scene_index)
 	_apply_environment(look)
 	_apply_lights(look)
-	_apply_earth_image(look)
+	_apply_photo(look)
 	_apply_stars(look)
 	_apply_bodies(look)
 
@@ -66,21 +73,39 @@ func _apply_lights(look: Dictionary) -> void:
 		fill.light_energy = look["fill"]["energy"]
 
 
-func _apply_earth_image(look: Dictionary) -> void:
-	if earth_image == null:
+func _apply_photo(look: Dictionary) -> void:
+	if photo == null:
 		return
-	var settings: Dictionary = look["earth_image"]
-	earth_image.visible = settings["visible"]
+	var settings: Dictionary = look["photo"]
+	photo.visible = settings["visible"]
 	if not settings["visible"]:
 		return
-	var material := earth_image.get_surface_override_material(0) as StandardMaterial3D
+	var texture := load(settings["texture"]) as Texture2D
+	if texture == null:
+		# A missing backdrop is scenery, not a rule: the sky behind it is still a
+		# sky, so say so in the log and let the scene play.
+		push_warning("SceneLook: no backdrop image at %s" % settings["texture"])
+		photo.visible = false
+		return
+
+	var material := photo.get_surface_override_material(0) as StandardMaterial3D
 	if material == null:
 		return
-	# Same reason as the Environment: the material is authored in the scene and
-	# shared, so tint a copy of it.
+	# Same reason as the Environment: the material and the mesh are authored in
+	# the scene and shared, so dress copies of them.
 	material = material.duplicate()
 	material.albedo_color = settings["tint"]
-	earth_image.set_surface_override_material(0, material)
+	material.albedo_texture = texture
+	photo.set_surface_override_material(0, material)
+
+	var quad := photo.mesh.duplicate() as QuadMesh
+	if quad == null:
+		return
+	# Fixed width, height from the image's own aspect. Cropping the top and bottom
+	# off a backdrop is invisible; stretching one destination's sky to another's
+	# proportions is not.
+	quad.size = Vector2(PHOTO_WIDTH, PHOTO_WIDTH * texture.get_height() / texture.get_width())
+	photo.mesh = quad
 
 
 func _apply_stars(look: Dictionary) -> void:
