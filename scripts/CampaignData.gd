@@ -42,18 +42,18 @@ const MODE_SWOOP: int = 3
 ##   sit in a scene forever. One flat minute for every scene — the later waves
 ##   are longer, but they are also faster, so they do not need more clock.
 ##
-## `quiz` is the scene's pool of teaching moments — one is drawn per run and both
-## the briefing and the quiz screen read that same one, so the question is always
-## about the fact the player was just shown. Each entry is self-contained:
+## `quiz` is the scene's pool of teaching moments — one is drawn per run and the
+## fact card and the quiz screen both read that same one, so the question is
+## always about the fact the player was just shown. Each entry is self-contained:
 ##
-## - `fact` — the briefing's "DID YOU KNOW?" card. True, and short enough to read
+## - `fact` — the fact card screen's "DID YOU KNOW?". True, and short enough to read
 ##   at a glance; the card is sized for roughly the length of the ones here.
 ## - `question` / `answers` / `correct` — three big touch buttons and the index of
 ##   the right one. The correct index is varied deliberately across the pool: kids
 ##   spot "it's always the first one" long before they learn any astronomy.
 ##
 ## `accent` is the scene's signature colour, from the storyboard's per-scene
-## palette. The briefing and quiz tint themselves with it so the four missions
+## palette. The briefing, fact card and quiz tint themselves with it so the four missions
 ## read as different places before any real art exists; the `look` block below
 ## keeps the battle in step with them.
 ##

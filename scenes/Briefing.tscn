@@ -1,25 +1,21 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/Briefing.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/DestinationBackdrop.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/SpaceBackdrop.tscn" id="3"]
 
-; Border is recoloured to the scene's accent at runtime, so this is only the
-; card's shape and its dark fill.
-[sub_resource type="StyleBoxFlat" id="StyleBox_fact"]
-content_margin_left = 36.0
-content_margin_top = 26.0
-content_margin_right = 36.0
-content_margin_bottom = 26.0
-bg_color = Color(0.07, 0.08, 0.12, 0.95)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.42, 0.56, 0.75, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+; Darkens the lower two-thirds of the destination photograph, where the story
+; line and the button sit. Earth's night-side city lights and Mars' bright
+; orange are the two images this exists for.
+[sub_resource type="Gradient" id="Gradient_scrim"]
+offsets = PackedFloat32Array(0, 0.42, 1)
+colors = PackedColorArray(0.02, 0.025, 0.05, 0, 0.02, 0.025, 0.05, 0.45, 0.02, 0.025, 0.05, 0.82)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_scrim"]
+gradient = SubResource("Gradient_scrim")
+width = 8
+height = 128
+fill_to = Vector2(0, 1)
 
 [node name="Briefing" type="Control"]
 anchor_right = 1.0
@@ -31,16 +27,40 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.035, 0.04, 0.07, 1)
 
-; Earth and its alien traffic, faint, over the flat dark base and under the
-; accent wash — so the screen is alive without the text having to fight it.
-[node name="SpaceBackdrop" parent="." instance=ExtResource("3")]
+; The destination itself — a photograph of the battle this briefing is sending
+; the player into. Faded in by its own script.
+[node name="Photo" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("2")
+image_alpha = 0.4
 
-; Tinted to the scene's accent at runtime — the cheapest way to make the four
-; missions read as four different places before Phase 6's backdrops exist.
+[node name="Scrim" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_scrim")
+
+; Alien traffic drifting over the photograph. Its own Earth is switched off —
+; there is a real destination behind it now, and two stacked worlds read as fog.
+;
+; Flown higher, fainter and two at a time than its defaults: over a photograph
+; the saucers read much harder than they do over flat dark, and the default lane
+; puts one straight through the "MISSION n OF 4" line.
+[node name="SpaceBackdrop" parent="." instance=ExtResource("3")]
+image_opacity = 0.0
+ship_opacity = 0.26
+ship_count = 2
+ship_width_range = Vector2(70, 100)
+lane_range = Vector2(0.02, 0.06)
+
+; Tinted to the scene's accent at runtime. With a photograph underneath, this is
+; what makes Mars read as Mars at a glance from across the room.
 [node name="AccentWash" type="ColorRect" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.24, 0.55, 0.9, 0.1)
+color = Color(0.24, 0.55, 0.9, 0.16)
 
 [node name="Layout" type="MarginContainer" parent="."]
 anchor_right = 1.0
@@ -52,7 +72,7 @@ theme_override_constants/margin_bottom = 50
 
 [node name="Column" type="VBoxContainer" parent="Layout"]
 alignment = 1
-theme_override_constants/separation = 16
+theme_override_constants/separation = 20
 
 [node name="Mission" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 24
@@ -67,6 +87,9 @@ text = "ISS — First Contact"
 horizontal_alignment = 1
 autowrap_mode = 3
 
+; Drawn open from nothing during the reveal, so its width is animated through
+; `custom_minimum_size` — a VBoxContainer re-sorts its children every frame and
+; would silently overwrite a tween on `position` or `size`.
 [node name="Rule" type="ColorRect" parent="Layout/Column"]
 custom_minimum_size = Vector2(260, 4)
 size_flags_horizontal = 4
@@ -88,39 +111,15 @@ horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Gap" type="Control" parent="Layout/Column"]
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 18)
 
-[node name="FactCard" type="PanelContainer" parent="Layout/Column"]
-custom_minimum_size = Vector2(860, 0)
-size_flags_horizontal = 4
-theme_override_styles/panel = SubResource("StyleBox_fact")
-
-[node name="FactBox" type="VBoxContainer" parent="Layout/Column/FactCard"]
-theme_override_constants/separation = 12
-
-[node name="FactHeading" type="Label" parent="Layout/Column/FactCard/FactBox"]
-theme_override_font_sizes/font_size = 26
-theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
-text = "DID YOU KNOW?"
-horizontal_alignment = 1
-
-[node name="FactText" type="Label" parent="Layout/Column/FactCard/FactBox"]
-theme_override_font_sizes/font_size = 25
-theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
-text = "The ISS orbits ~400 km above Earth."
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="Gap2" type="Control" parent="Layout/Column"]
-custom_minimum_size = Vector2(0, 6)
-
-; The only way out of this screen. Nothing here is on a timer — the fact card is
-; the teaching moment, so the player decides when they have finished reading it.
+; The only way out of this screen, and it leads to the fact card rather than
+; straight to the quiz. Nothing here is on a timer.
 [node name="ContinueButton" type="Button" parent="Layout/Column"]
 custom_minimum_size = Vector2(460, 84)
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 28
-text = "START THE QUIZ"
+text = "CONTINUE  ▶"
 
 ; Stripped before the kiosk build — see Briefing.gd.
 [node name="DevHint" type="Label" parent="."]

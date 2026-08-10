@@ -42,8 +42,9 @@ var elapsed_time: float = 0.0
 var scene_time_left: float = 0.0
 var scene_index: int = 1
 ## Which of the current scene's quiz variants this run drew — see `CampaignData`'s
-## `quiz` pool. Rolled once when the scene's briefing opens, because the briefing
-## and the quiz have to show the same one: the question is about the fact card.
+## `quiz` pool. Rolled once when the scene's briefing opens, because the briefing,
+## the fact card and the quiz all have to be showing the same one: the question is
+## about the fact the card taught.
 var quiz_variant: int = 0
 var player_name: String = ""
 ## True between `start_scene()` and the scene or the run ending. Gates both timers.
@@ -141,7 +142,8 @@ func roll_quiz_variant() -> int:
 	return quiz_variant
 
 
-## The fact/question/answers this scene drew — what the briefing and quiz show.
+## The fact/question/answers this scene drew — what the fact card and the quiz
+## show, and the only way either of them should reach for it.
 func quiz_entry() -> Dictionary:
 	return CampaignData.quiz(scene_index, quiz_variant)
 

@@ -27,8 +27,8 @@ const SOUNDS_IN_USE: PackedStringArray = [
 	"victory",          # HUD._on_scene_cleared, last scene
 	"quiz_correct",     # Quiz._on_answer_pressed
 	"quiz_wrong",       # Quiz._on_answer_pressed
-	"countdown",        # Quiz._run_countdown
-	"launch",           # Quiz._launch
+	"countdown",        # Quiz._run_countdown, FactCard._reveal
+	"launch",           # Quiz._launch, Briefing._reveal
 	"ui_click",         # Audio._on_any_button_pressed, every button in the game
 	"ui_key",           # SignIn._on_key_pressed
 ]
@@ -70,7 +70,7 @@ func test_the_battle_is_the_only_screen_with_its_own_bed() -> void:
 	assert_str(Audio.bed_for_scene(SceneRouter.GAME)).is_equal("battle")
 	for screen in [
 		SceneRouter.TITLE, SceneRouter.SIGN_IN, SceneRouter.BRIEFING,
-		SceneRouter.QUIZ, SceneRouter.RESULTS,
+		SceneRouter.FACT_CARD, SceneRouter.QUIZ, SceneRouter.RESULTS,
 	]:
 		assert_str(Audio.bed_for_scene(screen)).is_equal("menu")
 
@@ -88,6 +88,11 @@ func test_the_voice_pool_is_big_enough_for_the_worst_wave() -> void:
 func test_every_destination_has_a_photograph_for_the_attract_screen() -> void:
 	# A scene with no still is dropped from the cycle without a word, so the
 	# title would quietly advertise three destinations out of four.
+	#
+	# It guards the briefing and the fact card too: `DestinationBackdrop` shows
+	# the same photographs held still, and `AttractBackdrop.IMAGE_PATH` is an
+	# alias of its constant, so one missing file is one silently plain screen in
+	# three places rather than one.
 	var AttractBackdrop := load("res://scripts/AttractBackdrop.gd")
 	for index in range(1, CampaignData.count() + 1):
 		var path: String = AttractBackdrop.IMAGE_PATH % index
