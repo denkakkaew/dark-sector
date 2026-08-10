@@ -102,32 +102,27 @@ const SCENES: Array = [
 		"question": "How strong is the Moon's gravity compared to Earth's?",
 		"answers": ["The same", "One sixth", "Double"],
 		"correct": 1,
-		# No air to soften anything: a hard white sun, black star-filled sky, and
-		# grey regolith curving away below. Earth is the small blue marble the
-		# storyboard puts high in that sky — the one warm thing in the scene.
+		# No air to soften anything: a hard white sun and a black sky. The other
+		# surface scene's rule applies here too — the backdrop paints its own
+		# regolith, horizon, star field and the storyboard's small blue Earth, so
+		# the procedural sphere, the second marble and the generated stars are all
+		# gone. Each would have doubled something the image already has, and the
+		# ground sphere would have cut the alien base in half.
 		"look": {
 			"space": Color(0.01, 0.01, 0.02),
 			"ambient": Color(0.1, 0.1, 0.13),
 			"sun": {"color": Color(1, 1, 0.97), "energy": 0.95},
 			"fill": {"color": Color(0.6, 0.65, 0.78), "energy": 0.18},
-			"photo": {"visible": false, "texture": "", "tint": Color(1, 1, 1)},
-			"bodies": [
-				{
-					"radius": 120.0,
-					"position": Vector3(0, -138, -90),
-					"color": Color(0.62, 0.63, 0.66),
-					"mottle": 1.0,
-					"emission": 0.0,
-				},
-				{
-					"radius": 3.2,
-					"position": Vector3(-34, 34, -120),
-					"color": Color(0.3, 0.52, 0.78),
-					"mottle": 0.55,
-					"emission": 0.5,
-				},
-			],
-			"stars": 1.0,
+			"photo": {
+				"visible": true,
+				"texture": "res://assets/backdrop/moon_surface.png",
+				# Straight grey, no colour shift: unlike Mars there is no cast to
+				# correct, only a bright lit foreground to knock back so the
+				# turret stays in front of the regolith instead of in it.
+				"tint": Color(0.62, 0.62, 0.64),
+			},
+			"bodies": [],
+			"stars": 0.0,
 		},
 		"wave": {
 			"count": 16,
@@ -193,9 +188,11 @@ const SCENES: Array = [
 		"question": "What shields Earth from space radiation?",
 		"answers": ["Its atmosphere and magnetic field", "Clouds", "Satellites"],
 		"correct": 0,
-		# The darkest scene, and the only one lit in red: Earth is back, bright and
-		# close, and everything in front of it is washed in alert light. The sun is
-		# turned down so the red reads as an alarm rather than as a sunset.
+		# The darkest scene, and the only one lit in red: everything in front of the
+		# backdrop is washed in alert light, and the sun is turned down so the red
+		# reads as an alarm rather than as a sunset. The backdrop is the city
+		# itself, at night — the thing the whole campaign has been defending, and
+		# the only scene where losing has an address.
 		"look": {
 			"space": Color(0.01, 0.01, 0.03),
 			"ambient": Color(0.2, 0.07, 0.09),
@@ -203,11 +200,15 @@ const SCENES: Array = [
 			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.5},
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/space_earth.png",
-				"tint": Color(0.78, 0.6, 0.62),
+				"texture": "res://assets/backdrop/earth_city.png",
+				# The lightest knock-back in the campaign, and barely shifted: a
+				# night city is already dark and mostly black, so the usual push
+				# would put the lights out. The small warm bias is the alert light
+				# reaching the skyline.
+				"tint": Color(0.86, 0.74, 0.76),
 			},
 			"bodies": [],
-			# None: the Earth photograph covers the whole frustum and brings its own.
+			# None: the photograph covers the whole frustum and brings its own.
 			"stars": 0.0,
 		},
 		"wave": {
