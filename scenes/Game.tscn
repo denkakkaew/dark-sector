@@ -14,13 +14,15 @@ background_color = Color(0.02, 0.02, 0.06, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.12, 0.12, 0.18, 1)
 
-; Sized to the image's own 1.7917 aspect rather than the screen's 16:9, so it
-; covers the frustum with a sliver of crop instead of being squashed.
+; The width covers the frustum at the depth this hangs at, and is what
+; SceneLook.gd keeps; the height is scene 1's, recomputed per scene from whatever
+; image that scene hangs here, so a backdrop crops rather than squashes.
 [sub_resource type="QuadMesh" id="QuadMesh_backdrop"]
 size = Vector2(164.97, 92.079)
 
-; Knocked back so Earth sits behind the play area instead of competing with it,
-; and so the bright limb the aliens cross doesn't swallow them.
+; Scene 1's image and tint: the texture and the knock-back are per scene, set by
+; SceneLook.gd. Every scene knocks its backdrop back, so it sits behind the play
+; area instead of competing with it and doesn't swallow the aliens crossing it.
 [sub_resource type="StandardMaterial3D" id="Material_backdrop"]
 shading_mode = 0
 albedo_color = Color(0.7, 0.7, 0.7, 1)
@@ -67,15 +69,15 @@ environment = SubResource("Environment_1")
 ; Turns the four destinations into four places: sky, lights, star field and the
 ; planet bodies, all read from CampaignData's per-scene `look`. It reaches the
 ; nodes it dresses through the exports below rather than owning them, so the
-; framing of the camera, lights and Earth backdrop stays authored here.
+; framing of the camera, lights and backdrop stays authored here.
 ; `node_paths` is what makes the four exports below resolve to nodes instead of
 ; staying null: without it the paths are stored but never handed to the script.
-[node name="SceneLook" type="Node3D" parent="." node_paths=PackedStringArray("world_environment", "sun", "fill", "earth_image")]
+[node name="SceneLook" type="Node3D" parent="." node_paths=PackedStringArray("world_environment", "sun", "fill", "photo")]
 script = ExtResource("7")
 world_environment = NodePath("../WorldEnvironment")
 sun = NodePath("../DirectionalLight3D")
 fill = NodePath("../FillLight")
-earth_image = NodePath("../Backdrop")
+photo = NodePath("../Backdrop")
 
 ; Planet bodies are added here at runtime, and cleared on the next scene.
 [node name="Bodies" type="Node3D" parent="SceneLook"]
