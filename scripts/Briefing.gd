@@ -30,7 +30,9 @@ func _ready() -> void:
 	_mission.text = "MISSION %d OF %d" % [index, CampaignData.count()]
 	_title.text = entry["title"]
 	_story.text = entry["story"]
-	_fact_text.text = entry["fact"]
+	# The scene's story is fixed, but the fact card is one of several the scene can
+	# teach — drawn by the router on the way in, and the quiz asks about this one.
+	_fact_text.text = GameState.quiz_entry()["fact"]
 
 	# Until Phase 8's sign-in exists there is no name to show, and a placeholder
 	# one ("DEFENDER: defender") reads worse than no line at all.

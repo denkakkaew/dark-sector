@@ -45,7 +45,13 @@ func start_campaign() -> void:
 	show_briefing()
 
 
+## Every route into a scene comes through here — a new run, the next scene, and
+## the briefing's dev jump — which makes it the one place the scene's quiz variant
+## can be drawn. Doing it here rather than in `Briefing.gd` keeps the briefing and
+## the quiz reading the same pick: the question is about the fact card, so the two
+## screens cannot roll independently.
 func show_briefing() -> void:
+	GameState.roll_quiz_variant()
 	_go_to(BRIEFING)
 
 

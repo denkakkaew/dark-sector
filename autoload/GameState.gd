@@ -41,9 +41,19 @@ var elapsed_time: float = 0.0
 ## This is the timer the HUD shows; `elapsed_time` is the campaign total behind it.
 var scene_time_left: float = 0.0
 var scene_index: int = 1
+## Which of the current scene's quiz variants this run drew — see `CampaignData`'s
+## `quiz` pool. Rolled once when the scene's briefing opens, because the briefing
+## and the quiz have to show the same one: the question is about the fact card.
+var quiz_variant: int = 0
 var player_name: String = ""
 ## True between `start_scene()` and the scene or the run ending. Gates both timers.
 var scene_running: bool = false
+
+## The variant each scene handed out last time it was played, keyed by scene
+## index. Deliberately *not* cleared by `reset_campaign()` — like `player_name`,
+## it belongs to the kiosk rather than to the run, and its whole job is to stop
+## the next run repeating the fact this one just showed.
+var _last_quiz_variant: Dictionary = {}
 
 
 func _ready() -> void:
@@ -75,6 +85,7 @@ func reset_campaign() -> void:
 	elapsed_time = 0.0
 	scene_time_left = 0.0
 	scene_index = 1
+	quiz_variant = 0
 	scene_running = false
 	score_changed.emit(score)
 	energy_changed.emit(energy, MAX_ENERGY)
@@ -116,6 +127,23 @@ func campaign_complete() -> bool:
 
 func scene_name() -> String:
 	return CampaignData.scene_name(scene_index)
+
+
+## Draw this scene's fact and question out of its pool. Called once per scene, by
+## the router on the way into the briefing — the briefing shows the fact and the
+## quiz asks about it, so the pick has to be made before either screen loads and
+## then held still until the next scene.
+func roll_quiz_variant() -> int:
+	quiz_variant = CampaignData.random_quiz_variant(
+		scene_index, _last_quiz_variant.get(scene_index, -1)
+	)
+	_last_quiz_variant[scene_index] = quiz_variant
+	return quiz_variant
+
+
+## The fact/question/answers this scene drew — what the briefing and quiz show.
+func quiz_entry() -> Dictionary:
+	return CampaignData.quiz(scene_index, quiz_variant)
 
 
 func add_score(points: int) -> void:

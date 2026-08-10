@@ -15,19 +15,92 @@ func test_campaign_has_the_four_storyboard_scenes_in_order() -> void:
 	assert_array(names).is_equal(["ISS", "MOON", "MARS", "EARTH"])
 
 
-func test_every_scene_has_a_story_a_fact_and_a_three_answer_quiz() -> void:
+func test_every_scene_has_a_story_and_a_pool_of_facts_to_teach() -> void:
 	for i in range(1, CampaignData.count() + 1):
 		var entry := CampaignData.scene(i)
 		assert_str(entry["title"]).is_not_empty()
 		assert_str(entry["story"]).is_not_empty()
-		assert_str(entry["fact"]).is_not_empty()
-		assert_str(entry["question"]).is_not_empty()
 
-		# Three big touch buttons, per the storyboard — and the correct index has
-		# to point at one of them, which is the failure a typo would cause.
-		var answers: Array = entry["answers"]
-		assert_int(answers.size()).is_equal(3)
-		assert_int(entry["correct"]).is_between(0, answers.size() - 1)
+		# Several, so a kiosk replayed back to back doesn't teach the same fact
+		# every time. One would still work; it would just stop being a campaign
+		# worth playing twice.
+		assert_int(CampaignData.quiz_count(i)).is_greater(1)
+
+		for variant in CampaignData.quiz_count(i):
+			var quiz := CampaignData.quiz(i, variant)
+			assert_str(quiz["fact"]).is_not_empty()
+			assert_str(quiz["question"]).is_not_empty()
+
+			# Three big touch buttons, per the storyboard — and the correct index
+			# has to point at one of them, which is the failure a typo would cause.
+			var answers: Array = quiz["answers"]
+			assert_int(answers.size()).is_equal(3)
+			assert_int(quiz["correct"]).is_between(0, answers.size() - 1)
+			for answer in answers:
+				assert_str(answer).is_not_empty()
+
+
+func test_no_scene_hides_its_answer_in_the_same_slot_every_time() -> void:
+	# Kids find "it's always the first button" long before they find any
+	# astronomy, and then the quiz stops teaching anything at all.
+	for i in range(1, CampaignData.count() + 1):
+		var slots: Array = []
+		for variant in CampaignData.quiz_count(i):
+			var correct: int = CampaignData.quiz(i, variant)["correct"]
+			if not slots.has(correct):
+				slots.append(correct)
+		assert_int(slots.size()).is_greater(1)
+
+
+func test_no_scene_asks_the_same_question_twice() -> void:
+	# A duplicate in a pool is invisible in play — it just quietly makes one fact
+	# twice as likely as the rest — so it has to be caught here.
+	for i in range(1, CampaignData.count() + 1):
+		var questions: Array = []
+		for variant in CampaignData.quiz_count(i):
+			var question: String = CampaignData.quiz(i, variant)["question"]
+			assert_bool(questions.has(question)).is_false()
+			questions.append(question)
+
+
+func test_a_drawn_variant_is_always_one_of_the_scenes_own() -> void:
+	for i in range(1, CampaignData.count() + 1):
+		for roll in 30:
+			assert_int(CampaignData.random_quiz_variant(i)).is_between(
+				0, CampaignData.quiz_count(i) - 1
+			)
+
+
+func test_a_draw_never_repeats_the_variant_it_is_asked_to_avoid() -> void:
+	# The point of the pool: a second run in a row teaches a different fact.
+	for i in range(1, CampaignData.count() + 1):
+		for previous in CampaignData.quiz_count(i):
+			for roll in 30:
+				assert_int(CampaignData.random_quiz_variant(i, previous)).is_not_equal(previous)
+
+
+func test_every_variant_in_a_pool_can_actually_come_up() -> void:
+	# Avoiding the previous pick must not shrink the pool to a shuttle between two
+	# variants — over a run of draws every fact in the scene should appear.
+	var scene_index := 1
+	var pool_size := CampaignData.quiz_count(scene_index)
+	var seen: Array = []
+	var previous := -1
+	for roll in pool_size * 50:
+		previous = CampaignData.random_quiz_variant(scene_index, previous)
+		if not seen.has(previous):
+			seen.append(previous)
+	assert_int(seen.size()).is_equal(pool_size)
+
+
+func test_quiz_lookups_clamp_instead_of_crashing() -> void:
+	# `quiz_variant` is carried across a scene change in GameState, so a stale one
+	# from a longer pool must not be an out-of-bounds read on the briefing.
+	for i in range(1, CampaignData.count() + 1):
+		var first := CampaignData.quiz(i, 0)
+		var last := CampaignData.quiz(i, CampaignData.quiz_count(i) - 1)
+		assert_str(CampaignData.quiz(i, -5)["question"]).is_equal(first["question"])
+		assert_str(CampaignData.quiz(i, 999)["question"]).is_equal(last["question"])
 
 
 func test_every_scene_has_its_own_accent_colour() -> void:

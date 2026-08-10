@@ -9,6 +9,11 @@ extends RefCounted
 ## Phase 5 uses `name` and `wave`. The story/fact/quiz fields are already filled
 ## in from `planning/STORYBOARD.md` so Phases 6–7 are wiring rather than writing.
 ##
+## Each scene carries a **pool** of quiz variants rather than a single question,
+## and one is drawn per scene per run (see `random_quiz_variant()`). A kiosk gets
+## played over and over by the same kids, and a fact they have already been shown
+## teaches nothing the second time.
+##
 ## Scene indices are **1-based** everywhere (SCENE 1·ISS … SCENE 4·EARTH) to
 ## match the HUD; use `scene()` / `wave()` rather than indexing `SCENES` directly.
 
@@ -37,6 +42,16 @@ const MODE_SWOOP: int = 3
 ##   sit in a scene forever. One flat minute for every scene — the later waves
 ##   are longer, but they are also faster, so they do not need more clock.
 ##
+## `quiz` is the scene's pool of teaching moments — one is drawn per run and both
+## the briefing and the quiz screen read that same one, so the question is always
+## about the fact the player was just shown. Each entry is self-contained:
+##
+## - `fact` — the briefing's "DID YOU KNOW?" card. True, and short enough to read
+##   at a glance; the card is sized for roughly the length of the ones here.
+## - `question` / `answers` / `correct` — three big touch buttons and the index of
+##   the right one. The correct index is varied deliberately across the pool: kids
+##   spot "it's always the first one" long before they learn any astronomy.
+##
 ## `accent` is the scene's signature colour, from the storyboard's per-scene
 ## palette. The briefing and quiz tint themselves with it so the four missions
 ## read as different places before any real art exists; the `look` block below
@@ -62,10 +77,38 @@ const SCENES: Array = [
 		"title": "ISS — First Contact",
 		"accent": Color(0.24, 0.55, 0.9),
 		"story": "Alien scouts are attacking the International Space Station — man the turret!",
-		"fact": "The ISS orbits ~400 km above Earth at ~28,000 km/h. Astronauts on board see 16 sunrises every day!",
-		"question": "How many sunrises do ISS astronauts see each day?",
-		"answers": ["1", "16", "100"],
-		"correct": 1,
+		"quiz": [
+			{
+				"fact": "The ISS orbits ~400 km above Earth at ~28,000 km/h. Astronauts on board see 16 sunrises every day!",
+				"question": "How many sunrises do ISS astronauts see each day?",
+				"answers": ["1", "16", "100"],
+				"correct": 1,
+			},
+			{
+				"fact": "The ISS races all the way around the planet once every 90 minutes — 16 laps of Earth every single day.",
+				"question": "How long does the ISS take to circle Earth once?",
+				"answers": ["About 24 hours", "About a month", "About 90 minutes"],
+				"correct": 2,
+			},
+			{
+				"fact": "The ISS runs entirely on sunlight: eight huge solar wings turn it into all the electricity the station needs.",
+				"question": "Where does the ISS get its electricity?",
+				"answers": ["From giant solar panels", "From a very long cable to Earth", "From petrol engines"],
+				"correct": 0,
+			},
+			{
+				"fact": "The ISS is the biggest thing humans have ever built in space — end to end it is about as long as a football pitch.",
+				"question": "How big is the ISS?",
+				"answers": ["About the size of a bus", "About as long as a football pitch", "As big as the Moon"],
+				"correct": 1,
+			},
+			{
+				"fact": "Everything on the ISS floats, so astronauts sleep in sleeping bags clipped to the wall and their tools are tethered down.",
+				"question": "Why do ISS astronauts clip their sleeping bags to the wall?",
+				"answers": ["To keep warm", "To stop the bag getting dirty", "So they don't float away while they sleep"],
+				"correct": 2,
+			},
+		],
 		# Low orbit: the Earth photograph fills the lower view and lights the
 		# station. This is the look the gameplay scene was built against.
 		"look": {
@@ -91,10 +134,38 @@ const SCENES: Array = [
 		"title": "The Moon — Forward Base",
 		"accent": Color(0.62, 0.66, 0.72),
 		"story": "The aliens are building a secret base on the far side of the Moon. Stop the landers!",
-		"fact": "The Moon is 384,400 km from Earth, and its gravity is only 1/6 of ours. We always see the same side!",
-		"question": "How strong is the Moon's gravity compared to Earth's?",
-		"answers": ["The same", "One sixth", "Double"],
-		"correct": 1,
+		"quiz": [
+			{
+				"fact": "The Moon is 384,400 km from Earth, and its gravity is only 1/6 of ours. We always see the same side!",
+				"question": "How strong is the Moon's gravity compared to Earth's?",
+				"answers": ["The same", "One sixth", "Double"],
+				"correct": 1,
+			},
+			{
+				"fact": "The Moon has no air, so there is no wind and no rain. The footprints Apollo astronauts left in 1969 are still there today.",
+				"question": "Why are the Apollo footprints still on the Moon?",
+				"answers": ["There is no wind or rain to wipe them away", "They were carved into solid rock", "Astronauts repaint them every year"],
+				"correct": 0,
+			},
+			{
+				"fact": "The Moon turns once for every lap around Earth, so the same face always points at us. Nobody saw its far side until 1959!",
+				"question": "Why do we always see the same side of the Moon?",
+				"answers": ["It is held still and never turns", "It turns once for every lap around Earth", "Its other side is invisible"],
+				"correct": 1,
+			},
+			{
+				"fact": "The Moon is 384,400 km away — the Apollo astronauts needed about three days to fly there.",
+				"question": "How long did the Apollo astronauts take to reach the Moon?",
+				"answers": ["About three hours", "About three years", "About three days"],
+				"correct": 2,
+			},
+			{
+				"fact": "Sound needs air to travel through, and the Moon has none. Standing side by side, the Moonwalkers still had to talk by radio.",
+				"question": "Why did the Moonwalkers talk to each other by radio?",
+				"answers": ["There is no air to carry their voices", "The Moon is far too noisy", "They were miles apart from each other"],
+				"correct": 0,
+			},
+		],
 		# No air to soften anything: a hard white sun, black star-filled sky, and
 		# grey regolith curving away below. Earth is the small blue marble the
 		# storyboard puts high in that sky — the one warm thing in the scene.
@@ -136,10 +207,38 @@ const SCENES: Array = [
 		"title": "Mars — The Mining Raid",
 		"accent": Color(0.82, 0.38, 0.2),
 		"story": "Alien drones are stealing minerals from Mars to fuel their fleet. Stop the ore carriers!",
-		"fact": "Mars is red because of iron rust, and it has the tallest volcano in the solar system: Olympus Mons.",
-		"question": "Why does Mars look red?",
-		"answers": ["Its soil is full of iron rust", "It is very hot", "Aliens painted it"],
-		"correct": 0,
+		"quiz": [
+			{
+				"fact": "Mars is red because of iron rust, and it has the tallest volcano in the solar system: Olympus Mons.",
+				"question": "Why does Mars look red?",
+				"answers": ["Its soil is full of iron rust", "It is very hot", "Aliens painted it"],
+				"correct": 0,
+			},
+			{
+				"fact": "A day on Mars is almost the same as ours: the planet turns once every 24 hours and 37 minutes.",
+				"question": "How long is one day on Mars?",
+				"answers": ["Ten times longer than Earth's", "Almost the same as Earth's", "Only ten minutes"],
+				"correct": 1,
+			},
+			{
+				"fact": "Olympus Mons on Mars is the tallest volcano in the solar system — about three times the height of Mount Everest.",
+				"question": "How does Olympus Mons compare with Mount Everest?",
+				"answers": ["About three times taller", "About half as tall", "Exactly the same height"],
+				"correct": 0,
+			},
+			{
+				"fact": "Mars has two small, lumpy moons called Phobos and Deimos. They look more like potatoes than like our Moon.",
+				"question": "How many moons does Mars have?",
+				"answers": ["None at all", "Twelve", "Two"],
+				"correct": 2,
+			},
+			{
+				"fact": "Mars pulls with only about a third of Earth's gravity, so the same jump would carry you nearly three times as high.",
+				"question": "What would your jump be like on Mars?",
+				"answers": ["Exactly the same as on Earth", "Nearly three times higher", "You could not leave the ground"],
+				"correct": 1,
+			},
+		],
 		# The only scene with an atmosphere: dust turns the sky rust-pink, mutes
 		# the sun and bounces light back up, so nothing here goes fully black.
 		# No stars — you cannot see them through the dust.
@@ -179,10 +278,38 @@ const SCENES: Array = [
 		"title": "Earth Orbit — The Last Stand",
 		"accent": Color(0.86, 0.24, 0.28),
 		"story": "This is it — the alien armada has reached Earth. Hold the line, defender!",
-		"fact": "Earth's atmosphere and magnetic field protect us from space radiation every single day.",
-		"question": "What shields Earth from space radiation?",
-		"answers": ["Its atmosphere and magnetic field", "Clouds", "Satellites"],
-		"correct": 0,
+		"quiz": [
+			{
+				"fact": "Earth's atmosphere and magnetic field protect us from space radiation every single day.",
+				"question": "What shields Earth from space radiation?",
+				"answers": ["Its atmosphere and magnetic field", "Clouds", "Satellites"],
+				"correct": 0,
+			},
+			{
+				"fact": "The air we breathe is mostly nitrogen — about 78% of it. Only about a fifth is the oxygen our bodies use.",
+				"question": "What is most of Earth's air made of?",
+				"answers": ["Oxygen", "Nitrogen", "Carbon dioxide"],
+				"correct": 1,
+			},
+			{
+				"fact": "Oceans cover about 71% of Earth's surface. That water is why our planet looks blue from space.",
+				"question": "How much of Earth's surface is covered by ocean?",
+				"answers": ["About one tenth", "About one third", "About seven tenths"],
+				"correct": 2,
+			},
+			{
+				"fact": "Space officially begins just 100 km straight up — a shorter trip than many car journeys, if only you could drive upwards!",
+				"question": "How far up does space begin?",
+				"answers": ["About 100 km", "About 100 metres", "About a million km"],
+				"correct": 0,
+			},
+			{
+				"fact": "Earth is racing around the Sun at about 107,000 km/h, carrying everyone standing on it along for the ride.",
+				"question": "How fast is Earth travelling around the Sun?",
+				"answers": ["It is standing still", "About 100 km/h, like a car", "About 100,000 km/h"],
+				"correct": 2,
+			},
+		],
 		# The darkest scene, and the only one lit in red: Earth is back, bright and
 		# close, and everything in front of it is washed in alert light. The sun is
 		# turned down so the red reads as an alarm rather than as a sunset.
@@ -255,6 +382,38 @@ static func accent(index: int) -> Color:
 ## The battlefield's dressing for a 1-based scene index — see `look` above.
 static func look(index: int) -> Dictionary:
 	return scene(index)["look"]
+
+
+## How many quiz variants a scene has to draw from.
+static func quiz_count(index: int) -> int:
+	return scene(index)["quiz"].size()
+
+
+## One variant from a scene's pool: the fact card and the question about it.
+##
+## `variant` is clamped rather than trusted, for the same reason `scene()` clamps
+## its index — it is carried in `GameState` across a scene change, and a pool of
+## a different length would otherwise be an out-of-bounds crash on the briefing.
+static func quiz(index: int, variant: int) -> Dictionary:
+	var pool: Array = scene(index)["quiz"]
+	return pool[clampi(variant, 0, pool.size() - 1)]
+
+
+## A fresh variant for a scene, avoiding `previous` where the pool allows it.
+##
+## The avoidance is the point on a kiosk: the same child plays three runs in a
+## row, and drawing them the fact they were shown five minutes ago wastes the
+## one screen in the scene that is actually teaching something.
+static func random_quiz_variant(index: int, previous: int = -1) -> int:
+	var pool_size := quiz_count(index)
+	if pool_size <= 1:
+		return 0
+	var picked := randi() % pool_size
+	if picked == previous:
+		# One step along rather than re-rolling: a re-roll can land on `previous`
+		# again, and this keeps every other variant equally likely.
+		picked = (picked + 1 + randi() % (pool_size - 1)) % pool_size
+	return picked
 
 
 ## The order a scene's wave arrives in: one entry per spawn, true where an ore

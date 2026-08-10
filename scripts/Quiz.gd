@@ -29,7 +29,9 @@ var _skippable: bool = false
 
 func _ready() -> void:
 	var index := GameState.scene_index
-	var entry := CampaignData.scene(index)
+	# The variant the briefing just showed the fact for — drawn once per scene by
+	# the router, so this screen asks about the card the player actually read.
+	var entry := GameState.quiz_entry()
 	_correct_index = entry["correct"]
 	_question.text = entry["question"]
 	_accent_wash.color = Color(CampaignData.accent(index), 0.12)
@@ -78,7 +80,7 @@ func _on_answer_pressed(chosen: int) -> void:
 	if correct:
 		_feedback.text = "CORRECT!   Energy fully charged   +%d bonus" % GameState.QUIZ_BONUS
 	else:
-		var answers: Array = CampaignData.scene(GameState.scene_index)["answers"]
+		var answers: Array = GameState.quiz_entry()["answers"]
 		_feedback.text = "Good try! The answer is %s — %s" % [
 			LETTERS[_correct_index], answers[_correct_index]
 		]
