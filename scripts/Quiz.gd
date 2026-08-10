@@ -1,5 +1,5 @@
 extends Control
-## Storyboard screen 4: one question about the fact the briefing just showed,
+## Storyboard screen 4: one question about the fact the card just showed,
 ## and the answer charges the energy bar the battle is fought on.
 ##
 ## Correct → full bar + bonus score. Wrong → the right answer is shown warmly
@@ -29,8 +29,8 @@ var _skippable: bool = false
 
 func _ready() -> void:
 	var index := GameState.scene_index
-	# The variant the briefing just showed the fact for — drawn once per scene by
-	# the router, so this screen asks about the card the player actually read.
+	# The variant the fact card just showed — drawn once per scene by the router,
+	# so this screen asks about the card the player actually read.
 	var entry := GameState.quiz_entry()
 	_correct_index = entry["correct"]
 	_question.text = entry["question"]

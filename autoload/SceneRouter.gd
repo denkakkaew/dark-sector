@@ -3,14 +3,16 @@ extends Node
 ##
 ## Registered as an autoload so any screen can hand off to the next one without
 ## knowing what that is. Keeping the whole flow in one file is the point: the
-## shape of a session — title → sign-in → (briefing → quiz → battle → cleared) ×4
-## → results — is readable here rather than scattered across buttons and cards.
+## shape of a session — title → sign-in → (briefing → fact card → quiz → battle →
+## cleared) ×4 → results — is readable here rather than scattered across buttons
+## and cards.
 ##
 ## `GameState` holds *what* the run is; this holds *where* the player is.
 
 const TITLE := "res://scenes/Title.tscn"
 const SIGN_IN := "res://scenes/SignIn.tscn"
 const BRIEFING := "res://scenes/Briefing.tscn"
+const FACT_CARD := "res://scenes/FactCard.tscn"
 const QUIZ := "res://scenes/Quiz.tscn"
 const GAME := "res://scenes/Game.tscn"
 const RESULTS := "res://scenes/Results.tscn"
@@ -47,12 +49,20 @@ func start_campaign() -> void:
 
 ## Every route into a scene comes through here — a new run, the next scene, and
 ## the briefing's dev jump — which makes it the one place the scene's quiz variant
-## can be drawn. Doing it here rather than in `Briefing.gd` keeps the briefing and
-## the quiz reading the same pick: the question is about the fact card, so the two
-## screens cannot roll independently.
+## can be drawn. Doing it here rather than in a screen's `_ready()` keeps all
+## three screens that touch it — the briefing, the fact card and the quiz —
+## reading the same pick: the question is about the fact the card showed, so they
+## cannot roll independently.
 func show_briefing() -> void:
 	GameState.roll_quiz_variant()
 	_go_to(BRIEFING)
+
+
+## The scene's fact, on its own screen, between the briefing and the quiz. It is
+## the hinge of the three: the briefing sets the place, this teaches the fact, and
+## the quiz asks about it.
+func show_fact_card() -> void:
+	_go_to(FACT_CARD)
 
 
 func show_quiz() -> void:

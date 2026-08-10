@@ -14,7 +14,9 @@ extends Control
 ## Everything is driven off `CampaignData`, image path included, so a fifth
 ## destination is a table entry plus a `destination_5.png` and no code.
 
-const IMAGE_PATH := "res://assets/backdrop/destination_%d.png"
+## The briefing and the fact card show the same photographs, held still. Aliased
+## rather than repeated so there is one path to fix and one test guarding it.
+const IMAGE_PATH := DestinationBackdrop.IMAGE_PATH
 ## Seconds a destination is held before it starts giving way to the next.
 const HOLD: float = 6.0
 const FADE: float = 2.2

@@ -18,8 +18,13 @@ extends Node
 ## rather than a shorter timeout.
 
 ## Seconds of no input at all before the kiosk resets itself. Long, because the
-## briefing's fact card is a screen kids are *supposed* to sit still in front of
-## and reading it is not idling.
+## fact card is a screen kids are *supposed* to sit still in front of and reading
+## it is not idling.
+##
+## Splitting the briefing in two did not change what this measures. The handoff
+## between the two screens is a button press, and a press is input, so the clock
+## still counts one screen's worth of stillness — and each of the two is a
+## shorter read than the single screen they replaced.
 const IDLE_SECONDS: float = 90.0
 ## How long the "still there?" card is up before the reset. Counted inside
 ## IDLE_SECONDS, not added to it.
