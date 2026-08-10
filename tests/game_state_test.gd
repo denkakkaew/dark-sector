@@ -218,3 +218,56 @@ func test_advancing_runs_out_at_the_end_of_the_campaign() -> void:
 	assert_bool(state.campaign_complete()).is_true()
 	assert_bool(state.advance_scene()).is_false()
 	assert_int(state.scene_index).is_equal(CampaignData.count())
+
+
+func test_the_drawn_quiz_variant_is_what_both_screens_read() -> void:
+	# The briefing shows the fact and the quiz asks about it, so they have to be
+	# reading one pick — this is the pick.
+	var state := _make_state()
+
+	for scene_index in range(1, CampaignData.count() + 1):
+		state.scene_index = scene_index
+		var drawn: int = state.roll_quiz_variant()
+		assert_int(state.quiz_variant).is_equal(drawn)
+		assert_str(state.quiz_entry()["question"]).is_equal(
+			CampaignData.quiz(scene_index, drawn)["question"]
+		)
+
+
+func test_a_scene_replayed_never_opens_on_the_fact_it_just_taught() -> void:
+	# The kiosk case: the same child presses Play again straight away, and the
+	# memory of the last draw deliberately outlives `reset_campaign()`.
+	var state := _make_state()
+
+	var previous: int = state.roll_quiz_variant()
+	for run in 20:
+		state.reset_campaign()
+		var drawn: int = state.roll_quiz_variant()
+		assert_int(drawn).is_not_equal(previous)
+		previous = drawn
+
+
+func test_each_scene_remembers_its_own_last_draw() -> void:
+	# Scene 2's pool has nothing to do with scene 1's, so avoiding a repeat must
+	# be tracked per scene rather than as one "last variant".
+	var state := _make_state()
+
+	state.scene_index = 1
+	var first_scene_draw: int = state.roll_quiz_variant()
+	state.scene_index = 2
+	state.roll_quiz_variant()
+
+	# Back to scene 1: still avoiding scene 1's own last fact, not scene 2's.
+	state.scene_index = 1
+	for roll in 20:
+		assert_int(state.roll_quiz_variant()).is_not_equal(first_scene_draw)
+		first_scene_draw = state.quiz_variant
+
+
+func test_resetting_a_campaign_starts_from_a_defined_variant() -> void:
+	var state := _make_state()
+	state.scene_index = 3
+	state.roll_quiz_variant()
+
+	state.reset_campaign()
+	assert_int(state.quiz_variant).is_equal(0)
