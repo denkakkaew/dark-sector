@@ -62,15 +62,18 @@ const MODE_SWOOP: int = 3
 ## - `space` — what the camera sees where nothing else is: the sky colour.
 ## - `ambient` / `sun` / `fill` — the scene's lighting. Ambient is what lifts the
 ##   turret and the aliens out of black, so it carries most of a scene's mood.
-## - `earth_image` — the photographic Earth backdrop authored in `Game.tscn`.
-##   Only its visibility and tint change per scene; its framing was tuned by hand
-##   and stays where it is.
+## - `photo` — the painted backdrop authored in `Game.tscn`. `texture` is the
+##   image to hang on it, `tint` knocks it back so it stays scenery, and a scene
+##   with nothing to hang sets `visible` false. Its placement was tuned by hand
+##   and stays where it is; only its *height* moves, so an image of a different
+##   shape keeps its proportions instead of being stretched to Earth's.
 ## - `bodies` — flat-shaded spheres the scene builds for itself. A huge one
 ##   parked low is a planet surface curving away below the guns; a small one high
 ##   up is a distant world. `mottle` dusts the surface with noise (craters, dust);
-##   `emission` keeps a distant body from going black on its night side.
+##   `emission` keeps a distant body from going black on its night side. A scene
+##   whose `photo` already paints its ground and horizon has no need of them.
 ## - `stars` — density of the procedural star field, 0 for a sky that has none
-##   (Mars' is full of dust, and the Earth photo brings its own).
+##   (Mars' is full of dust, and the photographic backdrops bring their own).
 const SCENES: Array = [
 	{
 		"name": "ISS",
@@ -116,7 +119,11 @@ const SCENES: Array = [
 			"ambient": Color(0.12, 0.12, 0.18),
 			"sun": {"color": Color(1, 1, 1), "energy": 0.35},
 			"fill": {"color": Color(0.88, 0.92, 1), "energy": 0.55},
-			"earth_image": {"visible": true, "tint": Color(0.7, 0.7, 0.7)},
+			"photo": {
+				"visible": true,
+				"texture": "res://assets/backdrop/space_earth.png",
+				"tint": Color(0.7, 0.7, 0.7),
+			},
 			"bodies": [],
 			"stars": 0.0,
 		},
@@ -166,32 +173,27 @@ const SCENES: Array = [
 				"correct": 0,
 			},
 		],
-		# No air to soften anything: a hard white sun, black star-filled sky, and
-		# grey regolith curving away below. Earth is the small blue marble the
-		# storyboard puts high in that sky — the one warm thing in the scene.
+		# No air to soften anything: a hard white sun and a black sky. The other
+		# surface scene's rule applies here too — the backdrop paints its own
+		# regolith, horizon, star field and the storyboard's small blue Earth, so
+		# the procedural sphere, the second marble and the generated stars are all
+		# gone. Each would have doubled something the image already has, and the
+		# ground sphere would have cut the alien base in half.
 		"look": {
 			"space": Color(0.01, 0.01, 0.02),
 			"ambient": Color(0.1, 0.1, 0.13),
 			"sun": {"color": Color(1, 1, 0.97), "energy": 0.95},
 			"fill": {"color": Color(0.6, 0.65, 0.78), "energy": 0.18},
-			"earth_image": {"visible": false, "tint": Color(1, 1, 1)},
-			"bodies": [
-				{
-					"radius": 120.0,
-					"position": Vector3(0, -138, -90),
-					"color": Color(0.62, 0.63, 0.66),
-					"mottle": 1.0,
-					"emission": 0.0,
-				},
-				{
-					"radius": 3.2,
-					"position": Vector3(-34, 34, -120),
-					"color": Color(0.3, 0.52, 0.78),
-					"mottle": 0.55,
-					"emission": 0.5,
-				},
-			],
-			"stars": 1.0,
+			"photo": {
+				"visible": true,
+				"texture": "res://assets/backdrop/moon_surface.png",
+				# Straight grey, no colour shift: unlike Mars there is no cast to
+				# correct, only a bright lit foreground to knock back so the
+				# turret stays in front of the regolith instead of in it.
+				"tint": Color(0.62, 0.62, 0.64),
+			},
+			"bodies": [],
+			"stars": 0.0,
 		},
 		"wave": {
 			"count": 16,
@@ -242,26 +244,29 @@ const SCENES: Array = [
 		# The only scene with an atmosphere: dust turns the sky rust-pink, mutes
 		# the sun and bounces light back up, so nothing here goes fully black.
 		# No stars — you cannot see them through the dust.
+		#
+		# The one scene fought over a painted surface rather than open space. The
+		# backdrop carries the mining outpost the aliens are raiding, so the
+		# procedural ground sphere the other surface scene uses is gone: the photo
+		# paints its own ground, horizon and dust haze, and a sphere in front of it
+		# would only cut the outpost in half.
 		"look": {
-			# The sky is the only one in the campaign that isn't black, so it has
-			# to be light enough to read as dust rather than as an unlit room.
+			# The sky is the only one in the campaign that isn't black. Barely any
+			# of it survives behind the photo, but it has to agree with the image's
+			# own haze at the edges rather than framing it in a darker band.
 			"space": Color(0.4, 0.21, 0.16),
 			"ambient": Color(0.34, 0.2, 0.16),
 			"sun": {"color": Color(1, 0.85, 0.68), "energy": 0.7},
 			"fill": {"color": Color(1, 0.66, 0.5), "energy": 0.4},
-			"earth_image": {"visible": false, "tint": Color(1, 1, 1)},
-			"bodies": [
-				{
-					"radius": 130.0,
-					"position": Vector3(0, -146, -85),
-					# Dustier than the postcard red: at this size a saturated
-					# orange is a traffic cone, and the aliens have to stay the
-					# most colourful thing on the screen.
-					"color": Color(0.56, 0.3, 0.18),
-					"mottle": 0.8,
-					"emission": 0.0,
-				},
-			],
+			"photo": {
+				"visible": true,
+				"texture": "res://assets/backdrop/mars_surface.png",
+				# Knocked further back than Earth's, and towards grey: the image is
+				# a saturated orange edge to edge, and the aliens have to stay the
+				# most colourful thing on the screen.
+				"tint": Color(0.55, 0.51, 0.52),
+			},
+			"bodies": [],
 			"stars": 0.0,
 		},
 		"wave": {
@@ -310,17 +315,27 @@ const SCENES: Array = [
 				"correct": 2,
 			},
 		],
-		# The darkest scene, and the only one lit in red: Earth is back, bright and
-		# close, and everything in front of it is washed in alert light. The sun is
-		# turned down so the red reads as an alarm rather than as a sunset.
+		# The darkest scene, and the only one lit in red: everything in front of the
+		# backdrop is washed in alert light, and the sun is turned down so the red
+		# reads as an alarm rather than as a sunset. The backdrop is the city
+		# itself, at night — the thing the whole campaign has been defending, and
+		# the only scene where losing has an address.
 		"look": {
 			"space": Color(0.01, 0.01, 0.03),
 			"ambient": Color(0.2, 0.07, 0.09),
 			"sun": {"color": Color(1, 0.94, 0.92), "energy": 0.3},
 			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.5},
-			"earth_image": {"visible": true, "tint": Color(0.78, 0.6, 0.62)},
+			"photo": {
+				"visible": true,
+				"texture": "res://assets/backdrop/earth_city.png",
+				# The lightest knock-back in the campaign, and barely shifted: a
+				# night city is already dark and mostly black, so the usual push
+				# would put the lights out. The small warm bias is the alert light
+				# reaching the skyline.
+				"tint": Color(0.86, 0.74, 0.76),
+			},
 			"bodies": [],
-			# None: the Earth photograph covers the whole frustum and brings its own.
+			# None: the photograph covers the whole frustum and brings its own.
 			"stars": 0.0,
 		},
 		"wave": {

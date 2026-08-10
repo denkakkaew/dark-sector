@@ -158,7 +158,15 @@ func test_every_scene_has_a_look_the_battlefield_can_be_dressed_from() -> void:
 		assert_float(look["sun"]["energy"]).is_greater(0.0)
 		assert_float(look["fill"]["energy"]).is_greater_equal(0.0)
 		assert_float(look["stars"]).is_between(0.0, 1.0)
-		assert_bool(look["earth_image"]["visible"] is bool).is_true()
+		assert_bool(look["photo"]["visible"] is bool).is_true()
+
+		# A backdrop path that doesn't resolve is a push_warning and a scene with
+		# no backdrop — deliberately, so a kiosk never stops for it, which also
+		# means a typo here is invisible in play. This is what catches it.
+		if look["photo"]["visible"]:
+			assert_bool(ResourceLoader.exists(look["photo"]["texture"])).override_failure_message(
+				"Scene %d's backdrop image is missing: %s" % [i, look["photo"]["texture"]]
+			).is_true()
 
 		for body in look["bodies"]:
 			assert_float(body["radius"]).is_greater(0.0)
