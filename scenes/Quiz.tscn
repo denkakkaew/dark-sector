@@ -87,7 +87,7 @@ theme_override_constants/separation = 12
 [node name="Heading" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 26
 theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
-text = "MISSION QUIZ"
+text = "คำถามประจำภารกิจ"
 horizontal_alignment = 1
 
 [node name="Question" type="Label" parent="Layout/Column"]
@@ -95,7 +95,7 @@ custom_minimum_size = Vector2(900, 0)
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 34
 theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
-text = "Why does Mars look red?"
+text = "ทำไมดาวอังคารถึงดูเป็นสีแดง?"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -113,7 +113,7 @@ theme_override_styles/hover = SubResource("StyleBox_answer_hover")
 theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
 theme_override_styles/focus = SubResource("StyleBox_answer_hover")
 theme_override_font_sizes/font_size = 28
-text = "A"
+text = "ก"
 
 [node name="AnswerB" type="Button" parent="Layout/Column/Answers"]
 custom_minimum_size = Vector2(900, 76)
@@ -122,7 +122,7 @@ theme_override_styles/hover = SubResource("StyleBox_answer_hover")
 theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
 theme_override_styles/focus = SubResource("StyleBox_answer_hover")
 theme_override_font_sizes/font_size = 28
-text = "B"
+text = "ข"
 
 [node name="AnswerC" type="Button" parent="Layout/Column/Answers"]
 custom_minimum_size = Vector2(900, 76)
@@ -131,7 +131,7 @@ theme_override_styles/hover = SubResource("StyleBox_answer_hover")
 theme_override_styles/pressed = SubResource("StyleBox_answer_hover")
 theme_override_styles/focus = SubResource("StyleBox_answer_hover")
 theme_override_font_sizes/font_size = 28
-text = "C"
+text = "ค"
 
 ; Blank but present from the start, so the answer buttons don't jump when
 ; feedback appears under them.
@@ -151,7 +151,7 @@ theme_override_constants/separation = 14
 [node name="EnergyLabel" type="Label" parent="Layout/Column/EnergyRow"]
 theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
-text = "ENERGY"
+text = "พลังงาน"
 vertical_alignment = 1
 
 [node name="EnergyBar" type="ProgressBar" parent="Layout/Column/EnergyRow"]

@@ -1,0 +1,35 @@
+; The Thai build's default UI font, wired into every screen at once through
+; `gui/theme/custom_font` in project.godot — no screen overrides a font, only
+; font *sizes*, so setting it here is the whole job.
+;
+; Godot's built-in default font has no Thai glyphs at all: every Thai string
+; would draw as tofu boxes. Noto Sans Thai (SIL Open Font License 1.1) carries
+; the full Thai block *and* Latin, so the score numbers, the "DARK SECTOR"
+; wordmark and the call signs keep working from the same file.
+;
+; It is a variable font (Thin…Black on the `wght` axis). `variation_opentype`
+; keys must be the **integer** OpenType tag, not the string "wght" — a string
+; key is accepted, saved back out and silently ignored, and the font just draws
+; at its default instance. 2003265652 is `wght`. 600 is picked to sit at the
+; weight of the engine default this replaces: the screens were spaced against a
+; semibold, and Regular Thai at 88px reads thin on a kiosk seen from standing
+; distance.
+;
+; The fallback is for the UI symbols the screens are decorated with — ▶ ✔ 🏆 ⌫
+; ★ ↻ ⎋ ⌂ ◄ — which are in no Thai text font. On the Windows touchscreen this is
+; built for, Segoe UI Symbol/Emoji cover all of them. A web export has no system
+; fonts to reach for, so those glyphs fall back to tofu there; the text beside
+; every one of them still says what the button does.
+[gd_resource type="FontVariation" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/font/NotoSansThai-Regular.ttf" id="1"]
+
+[sub_resource type="SystemFont" id="SystemFont_symbols"]
+font_names = PackedStringArray("Segoe UI Symbol", "Segoe UI Emoji", "Segoe UI", "Arial")
+
+[resource]
+fallbacks = Array[Font]([SubResource("SystemFont_symbols")])
+base_font = ExtResource("1")
+variation_opentype = {
+2003265652: 600.0
+}

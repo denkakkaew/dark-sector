@@ -8,9 +8,47 @@ extends Control
 ## Android/iOS feature — on the Windows touchscreen this is built for, tapping a
 ## `LineEdit` brings up nothing at all, so without these keys the kiosk cannot be
 ## signed into. The hardware keyboard keeps working alongside them for dev.
+##
+## The Thai build types Thai, so the keyboard is Thai. Rows 1–4 are the Kedmanee
+## (เกษมณี) layout's unshifted rows in their real positions, so anyone who has
+## ever typed Thai finds the letters where their fingers expect them. Rows 5–6
+## are Kedmanee's *shifted* letters, laid out flat instead of behind a shift key:
+## a name like ณัฐ or สิทธิ์ needs them, and a shift key is one more thing for an
+## eight-year-old to get stuck behind. 67 keys is the whole of written Thai a
+## name can use — 42 consonants, every vowel, every tone mark.
+##
+## ฃ, ฅ and ฦ are deliberately absent: they are obsolete, appear in no modern
+## name, and each one costs a key that a vowel needs more.
+##
+## NOTE: Kedmanee is a *touch-typing* layout — its order is by letter frequency,
+## not by the ก ข ค ง alphabet a Thai child recites. A kid hunting for ม has to
+## scan all 67. If the kiosk shows that, swap KEY_ROWS for ALPHABETICAL_ROWS
+## below; nothing else has to change.
+const KEY_ROWS: Array[String] = [
+	"ๅภถุึคตจขช",
+	"ๆไำพะัีรนยบล",
+	"ฟหกดเ้่าสวง",
+	"ผปแอิืทมใฝ",
+	"ูฤฆฏโฌ็๋ษศซฎฑ",
+	"ธํ๊ณญฐฉฮ์ฒฬ",
+]
 
-const KEY_ROWS: Array[String] = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
-const KEY_SIZE := Vector2(84, 62)
+## The same 67 keys in the order Thai children learn them (ก ไก่, ข ไข่, …), with
+## the vowels and tone marks gathered after the consonants. Unused; here so the
+## swap described above is a one-word edit at the kiosk rather than a re-typing
+## of the whole Thai alphabet under time pressure.
+const ALPHABETICAL_ROWS: Array[String] = [
+	"กขคฆงจฉชซฌญฎ",
+	"ฏฐฑฒณดตถทธนบ",
+	"ปผฝพฟภมยรลวศ",
+	"ษสหฬอฮฤๅ",
+	"ะัาำิีึืุู",
+	"เแโใไ่้๊๋็์ํๆ",
+]
+
+## Wider and shorter than the Latin build's keys: six rows of up to thirteen have
+## to fit the same 1152×648 screen that held three rows of ten.
+const KEY_SIZE := Vector2(66, 46)
 const BACKSPACE := "⌫"
 
 @onready var _name_field: LineEdit = $Layout/Column/FieldBox/NameField
@@ -23,9 +61,10 @@ var _leaving: bool = false
 
 func _ready() -> void:
 	_name_field.max_length = Leaderboard.NAME_LIMIT
-	# The board shows names in a fixed-width column and players re-enter theirs
-	# from memory next time; one case removes both problems.
-	_name_field.text = GameState.player_name.to_upper()
+	# No case-folding here, unlike the Latin build: Thai has no upper and lower
+	# case, so there is nothing to normalise and `to_upper()` would only shout at
+	# whatever Latin a player mixed in.
+	_name_field.text = GameState.player_name
 	_name_field.caret_column = _name_field.text.length()
 	_name_field.text_changed.connect(_on_name_changed)
 	_name_field.text_submitted.connect(func(_t: String) -> void: _play())
@@ -41,7 +80,7 @@ func _build_keyboard() -> void:
 	for row_index in KEY_ROWS.size():
 		var row := HBoxContainer.new()
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		row.add_theme_constant_override("separation", 8)
+		row.add_theme_constant_override("separation", 6)
 		_keyboard.add_child(row)
 		for letter in KEY_ROWS[row_index]:
 			row.add_child(_make_key(letter))
@@ -55,7 +94,10 @@ func _make_key(label: String, width_scale: float = 1.0) -> Button:
 	var key := Button.new()
 	key.text = label
 	key.custom_minimum_size = Vector2(KEY_SIZE.x * width_scale, KEY_SIZE.y)
-	key.add_theme_font_size_override("font_size", 26)
+	# A lone Thai vowel or tone mark draws on a dotted circle (◌ั, ◌์) — HarfBuzz
+	# inserts it and the font carries U+25CC — so a key is never a floating
+	# accent with nothing under it. That pairing needs the room 24px leaves it.
+	key.add_theme_font_size_override("font_size", 24)
 	# Never take focus: the field has to keep the caret so a hardware keyboard
 	# and the on-screen one can be used in the same sitting.
 	key.focus_mode = Control.FOCUS_NONE
@@ -77,9 +119,6 @@ func _on_key_pressed(label: String) -> void:
 
 
 func _on_name_changed(_text: String) -> void:
-	var caret := _name_field.caret_column
-	_name_field.text = _name_field.text.to_upper()
-	_name_field.caret_column = caret
 	_refresh_play_button()
 
 

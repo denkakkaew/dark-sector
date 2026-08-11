@@ -15,11 +15,11 @@ const VISIBLE_ROWS: int = 8
 
 const COLUMNS: Array[Dictionary] = [
 	{"key": "rank", "title": "#", "width": 58.0, "align": HORIZONTAL_ALIGNMENT_RIGHT},
-	{"key": "name", "title": "NAME", "width": 300.0, "align": HORIZONTAL_ALIGNMENT_LEFT},
-	{"key": "score", "title": "SCORE", "width": 170.0, "align": HORIZONTAL_ALIGNMENT_RIGHT},
-	{"key": "scene", "title": "SCENE", "width": 120.0, "align": HORIZONTAL_ALIGNMENT_CENTER},
-	{"key": "quiz", "title": "QUIZ", "width": 110.0, "align": HORIZONTAL_ALIGNMENT_CENTER},
-	{"key": "time", "title": "TIME", "width": 120.0, "align": HORIZONTAL_ALIGNMENT_RIGHT},
+	{"key": "name", "title": "ชื่อ", "width": 300.0, "align": HORIZONTAL_ALIGNMENT_LEFT},
+	{"key": "score", "title": "คะแนน", "width": 170.0, "align": HORIZONTAL_ALIGNMENT_RIGHT},
+	{"key": "scene", "title": "ด่าน", "width": 120.0, "align": HORIZONTAL_ALIGNMENT_CENTER},
+	{"key": "quiz", "title": "คำถาม", "width": 110.0, "align": HORIZONTAL_ALIGNMENT_CENTER},
+	{"key": "time", "title": "เวลา", "width": 120.0, "align": HORIZONTAL_ALIGNMENT_RIGHT},
 ]
 
 const ROW_COLOR := Color(0.86, 0.9, 0.97)
@@ -30,8 +30,11 @@ const YOU_COLOR := Color(1.0, 0.87, 0.35)
 const WIN_COLOR := Color(0.25, 0.92, 0.62)
 const LOSS_COLOR := Color(1.0, 0.55, 0.42)
 
-const HEADER_FONT: int = 19
-const ROW_FONT: int = 22
+## Two points down from the Latin build. Thai draws a taller line box at the
+## same point size — tone marks sit above the letter and vowels below it — and
+## eight rows of the difference is a button row's worth of screen.
+const HEADER_FONT: int = 17
+const ROW_FONT: int = 20
 
 @onready var _outcome: Label = $Layout/Column/Outcome
 @onready var _table_panel: PanelContainer = $Layout/Column/TablePanel
@@ -56,7 +59,7 @@ func _ready() -> void:
 	# from the title, no signed-in player to play again *as*.
 	_play_again_button.visible = not view_only
 	_sign_out_button.visible = not view_only
-	_title_button.text = "‹  BACK" if view_only else "⌂  TITLE"
+	_title_button.text = "‹  ย้อนกลับ" if view_only else "⌂  หน้าแรก"
 
 	_play_again_button.pressed.connect(_on_play_again_pressed)
 	_sign_out_button.pressed.connect(_on_sign_out_pressed)
@@ -75,10 +78,10 @@ func _show_outcome(view_only: bool) -> void:
 	var run := Leaderboard.last_run
 	var scene_index := int(run["scene_reached"])
 	if bool(run["won"]):
-		_outcome.text = "CAMPAIGN COMPLETE — ALL %d SCENES HELD" % CampaignData.count()
+		_outcome.text = "ปกป้องโลกสำเร็จ — ผ่านครบทั้ง %d ด่าน" % CampaignData.count()
 		_outcome.add_theme_color_override("font_color", WIN_COLOR)
 	else:
-		_outcome.text = "STATION OFFLINE — REACHED SCENE %d · %s" % [
+		_outcome.text = "ภารกิจล้มเหลว — ไปถึงด่าน %d · %s" % [
 			scene_index, CampaignData.scene_name(scene_index)
 		]
 		_outcome.add_theme_color_override("font_color", LOSS_COLOR)
@@ -91,7 +94,7 @@ func _build_table(view_only: bool) -> void:
 	if Leaderboard.entries.is_empty():
 		_table_panel.hide()
 		_outcome.show()
-		_outcome.text = "No runs on the board yet — be the first."
+		_outcome.text = "ยังไม่มีใครขึ้นกระดานเลย — มาเป็นคนแรกกัน!"
 		_outcome.add_theme_color_override("font_color", HEADER_COLOR)
 		return
 
@@ -114,7 +117,7 @@ func _add_row(rank: int, entry: Dictionary, is_you: bool) -> void:
 	var color := YOU_COLOR if is_you else ROW_COLOR
 	var name_text: String = entry["name"]
 	if is_you:
-		name_text += "  ◄ YOU"
+		name_text += "  ◄ คุณ"
 	var scene_text := "%d" % int(entry["scene_reached"])
 	if bool(entry["won"]):
 		scene_text += " ✓"
@@ -146,11 +149,11 @@ func _show_result_line(view_only: bool) -> void:
 		return
 	var score := _score_text(int(Leaderboard.last_run["score"]))
 	if Leaderboard.last_run_rank < 0:
-		_result_line.text = "Your run: %s — not on the board this time. Go again!" % score
+		_result_line.text = "คะแนนของคุณ: %s — ยังไม่ติดอันดับ ลองอีกครั้งนะ!" % score
 	elif Leaderboard.last_run_personal_best:
-		_result_line.text = "Your run: %s — new personal best!  ★" % score
+		_result_line.text = "คะแนนของคุณ: %s — สถิติใหม่ของตัวเอง!  ★" % score
 	else:
-		_result_line.text = "Your run: %s — rank %d of %d" % [
+		_result_line.text = "คะแนนของคุณ: %s — อันดับที่ %d จาก %d" % [
 			score, Leaderboard.last_run_rank + 1, Leaderboard.entries.size()
 		]
 

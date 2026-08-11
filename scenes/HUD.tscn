@@ -86,7 +86,7 @@ theme_override_constants/separation = 12
 [node name="EnergyLabel" type="Label" parent="TopBar/EnergyGroup"]
 theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
-text = "ENERGY"
+text = "พลังงาน"
 vertical_alignment = 1
 
 [node name="EnergyBar" type="ProgressBar" parent="TopBar/EnergyGroup"]
@@ -108,7 +108,7 @@ theme_override_constants/separation = 28
 [node name="SceneLabel" type="Label" parent="TopBar/CentreGroup"]
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
-text = "SCENE 1·ISS"
+text = "ด่าน 1·ISS"
 vertical_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="TopBar/CentreGroup"]
@@ -124,7 +124,7 @@ anchor_bottom = 1.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
-text = "SCORE 0"
+text = "คะแนน 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
@@ -157,13 +157,13 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="GameOverPanel/Card/Layout"]
 theme_override_font_sizes/font_size = 52
 theme_override_colors/font_color = Color(1, 0.35, 0.28, 1)
-text = "GAME OVER"
+text = "ภารกิจล้มเหลว"
 horizontal_alignment = 1
 
 [node name="FinalScore" type="Label" parent="GameOverPanel/Card/Layout"]
 theme_override_font_sizes/font_size = 26
-text = "REACHED SCENE 1 · ISS
-SCORE 0   TIME 0:00"
+text = "ไปถึงด่าน 1 · ISS
+คะแนน 0   เวลา 0:00"
 horizontal_alignment = 1
 
 ; Leads to the results board, where the run is recorded and Play Again lives —
@@ -171,7 +171,7 @@ horizontal_alignment = 1
 [node name="RetryButton" type="Button" parent="GameOverPanel/Card/Layout"]
 custom_minimum_size = Vector2(320, 76)
 theme_override_font_sizes/font_size = 30
-text = "VIEW RANKING  ▶"
+text = "ดูอันดับ  ▶"
 
 ; Phase 6 replaces this with the storyboard's Scene Cleared screen (6) and the
 ; victory screen (7); for now it is the same card shape as game over, so the end
@@ -200,15 +200,15 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="SceneClearedPanel/Card/Layout"]
 theme_override_font_sizes/font_size = 52
 theme_override_colors/font_color = Color(0.25, 0.92, 0.62, 1)
-text = "SCENE CLEARED"
+text = "ผ่านด่านแล้ว!"
 horizontal_alignment = 1
 
 [node name="Summary" type="Label" parent="SceneClearedPanel/Card/Layout"]
 theme_override_font_sizes/font_size = 26
-text = "SCORE 0   TIME 0:00"
+text = "คะแนน 0   เวลา 0:00"
 horizontal_alignment = 1
 
 [node name="ContinueButton" type="Button" parent="SceneClearedPanel/Card/Layout"]
 custom_minimum_size = Vector2(320, 76)
 theme_override_font_sizes/font_size = 30
-text = "CONTINUE"
+text = "ต่อไป"

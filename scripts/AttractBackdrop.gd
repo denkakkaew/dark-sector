@@ -117,6 +117,6 @@ func _advance() -> void:
 
 func _set_caption(slot: int) -> void:
 	var index := _indices[slot]
-	_caption.text = "MISSION %d OF %d" % [index, CampaignData.count()]
+	_caption.text = "ภารกิจที่ %d จาก %d" % [index, CampaignData.count()]
 	_destination.text = CampaignData.scene_name(index)
 	_destination.add_theme_color_override("font_color", CampaignData.accent(index))

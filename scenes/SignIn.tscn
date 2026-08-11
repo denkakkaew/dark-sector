@@ -51,24 +51,24 @@ color = Color(0.03, 0.035, 0.06, 1)
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/margin_left = 90
-theme_override_constants/margin_top = 32
+theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 90
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_bottom = 24
 
 [node name="Column" type="VBoxContainer" parent="Layout"]
 alignment = 1
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Heading" type="Label" parent="Layout/Column"]
-theme_override_font_sizes/font_size = 46
+theme_override_font_sizes/font_size = 34
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
-text = "WHO'S DEFENDING EARTH?"
+text = "ใครจะมาปกป้องโลก?"
 horizontal_alignment = 1
 
 [node name="Prompt" type="Label" parent="Layout/Column"]
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.72, 0.82, 0.95, 1)
-text = "Enter your name, cadet:"
+text = "พิมพ์ชื่อของคุณ ผู้พิทักษ์:"
 horizontal_alignment = 1
 
 [node name="FieldBox" type="CenterContainer" parent="Layout/Column"]
@@ -76,43 +76,34 @@ horizontal_alignment = 1
 ; `max_length` is set from Leaderboard.NAME_LIMIT at runtime so the field and the
 ; board's name column can never disagree about how long a call-sign can be.
 [node name="NameField" type="LineEdit" parent="Layout/Column/FieldBox"]
-custom_minimum_size = Vector2(560, 74)
-theme_override_font_sizes/font_size = 34
+custom_minimum_size = Vector2(560, 66)
+theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBox_field")
 theme_override_styles/focus = SubResource("StyleBox_field")
-placeholder_text = "CALL SIGN"
+placeholder_text = "ชื่อเรียก"
 alignment = 1
 caret_blink = true
 
 [node name="PlayButton" type="Button" parent="Layout/Column"]
-custom_minimum_size = Vector2(340, 84)
+custom_minimum_size = Vector2(300, 68)
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBox_play")
 theme_override_styles/hover = SubResource("StyleBox_play")
 theme_override_styles/pressed = SubResource("StyleBox_play")
 theme_override_styles/focus = SubResource("StyleBox_play")
-text = "✔  PLAY"
-
-[node name="Gap" type="Control" parent="Layout/Column"]
-custom_minimum_size = Vector2(0, 10)
+text = "✔  เล่นเลย"
 
 ; Rows of keys are generated into this by SignIn.gd — see the note there about
 ; why the kiosk needs its own keyboard rather than the engine's.
 [node name="Keyboard" type="VBoxContainer" parent="Layout/Column"]
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="BackButton" type="Button" parent="."]
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -180.0
-offset_top = -62.0
-offset_right = -32.0
-offset_bottom = -20.0
-grow_horizontal = 0
-grow_vertical = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 172.0
+offset_bottom = 60.0
 focus_mode = 0
 theme_override_font_sizes/font_size = 20
-text = "‹  BACK"
+text = "‹  ย้อนกลับ"

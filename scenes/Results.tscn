@@ -38,18 +38,18 @@ color = Color(0.03, 0.035, 0.06, 1)
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/margin_left = 70
-theme_override_constants/margin_top = 26
+theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 70
-theme_override_constants/margin_bottom = 26
+theme_override_constants/margin_bottom = 18
 
 [node name="Column" type="VBoxContainer" parent="Layout"]
 alignment = 1
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Heading" type="Label" parent="Layout/Column"]
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 38
 theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
-text = "🏆  TOP DEFENDERS"
+text = "🏆  ทำเนียบผู้พิทักษ์"
 horizontal_alignment = 1
 
 ; How the run that just ended finished — recoloured and rewritten at runtime,
@@ -57,7 +57,7 @@ horizontal_alignment = 1
 [node name="Outcome" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.25, 0.92, 0.62, 1)
-text = "CAMPAIGN COMPLETE"
+text = "ปกป้องโลกสำเร็จ"
 horizontal_alignment = 1
 
 [node name="TablePanel" type="PanelContainer" parent="Layout/Column"]
@@ -68,13 +68,13 @@ theme_override_styles/panel = SubResource("StyleBox_table")
 ; that formats each cell, so adding a column is one edit and not three.
 [node name="Table" type="GridContainer" parent="Layout/Column/TablePanel"]
 theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 9
+theme_override_constants/v_separation = 6
 columns = 6
 
 [node name="ResultLine" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
-text = "Your run: 0"
+text = "คะแนนของคุณ: 0"
 horizontal_alignment = 1
 
 [node name="Buttons" type="HBoxContainer" parent="Layout/Column"]
@@ -84,14 +84,14 @@ theme_override_constants/separation = 24
 [node name="PlayAgainButton" type="Button" parent="Layout/Column/Buttons"]
 custom_minimum_size = Vector2(260, 74)
 theme_override_font_sizes/font_size = 26
-text = "↻  PLAY AGAIN"
+text = "↻  เล่นอีกครั้ง"
 
 [node name="SignOutButton" type="Button" parent="Layout/Column/Buttons"]
 custom_minimum_size = Vector2(240, 74)
 theme_override_font_sizes/font_size = 26
-text = "⎋  SIGN OUT"
+text = "⎋  ออกจากระบบ"
 
 [node name="TitleButton" type="Button" parent="Layout/Column/Buttons"]
 custom_minimum_size = Vector2(240, 74)
 theme_override_font_sizes/font_size = 26
-text = "⌂  TITLE"
+text = "⌂  หน้าแรก"

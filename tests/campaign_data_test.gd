@@ -12,7 +12,9 @@ func test_campaign_has_the_four_storyboard_scenes_in_order() -> void:
 	var names: Array = []
 	for i in range(1, CampaignData.count() + 1):
 		names.append(CampaignData.scene_name(i))
-	assert_array(names).is_equal(["ISS", "MOON", "MARS", "EARTH"])
+	# "ISS" stays Latin — it is the station's name in Thai too, and the HUD chip
+	# has room for three characters rather than for สถานีอวกาศนานาชาติ.
+	assert_array(names).is_equal(["ISS", "ดวงจันทร์", "ดาวอังคาร", "โลก"])
 
 
 func test_every_scene_has_a_story_and_a_pool_of_facts_to_teach() -> void:
@@ -237,4 +239,4 @@ func test_scene_lookups_clamp_instead_of_crashing() -> void:
 	# Callers pass GameState.scene_index around; an off-by-one must not throw.
 	assert_str(CampaignData.scene_name(0)).is_equal("ISS")
 	assert_str(CampaignData.scene_name(-3)).is_equal("ISS")
-	assert_str(CampaignData.scene_name(99)).is_equal("EARTH")
+	assert_str(CampaignData.scene_name(99)).is_equal("โลก")

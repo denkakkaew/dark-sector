@@ -49,7 +49,7 @@ func _ready() -> void:
 	var entry := CampaignData.scene(index)
 	var accent := CampaignData.accent(index)
 
-	_mission.text = "MISSION %d OF %d" % [index, CampaignData.count()]
+	_mission.text = "ภารกิจที่ %d จาก %d" % [index, CampaignData.count()]
 	_title.text = entry["title"]
 	_story.text = entry["story"]
 
@@ -58,7 +58,7 @@ func _ready() -> void:
 	if GameState.player_name.is_empty():
 		_callsign.hide()
 	else:
-		_callsign.text = "DEFENDER %s" % GameState.player_name.to_upper()
+		_callsign.text = "ผู้พิทักษ์ %s" % GameState.player_name
 
 	_accent_wash.color = Color(accent, 0.16)
 	_rule.color = accent

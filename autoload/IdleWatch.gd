@@ -93,7 +93,7 @@ func _reset() -> void:
 
 
 func _show_warning(remaining: float) -> void:
-	_message.text = "Still there?\nTouch anywhere to keep playing.\n\n%d" % ceili(remaining)
+	_message.text = "ยังอยู่ไหม?\nแตะหน้าจอเพื่อเล่นต่อ\n\n%d" % ceili(remaining)
 	if not _layer.visible:
 		_layer.show()
 

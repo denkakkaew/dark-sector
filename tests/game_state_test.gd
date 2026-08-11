@@ -99,7 +99,7 @@ func test_scene_name_and_time_text_match_the_hud_format() -> void:
 	assert_str(state.scene_name()).is_equal("ISS")
 
 	state.start_scene(3)
-	assert_str(state.scene_name()).is_equal("MARS")
+	assert_str(state.scene_name()).is_equal("ดาวอังคาร")
 
 	state.elapsed_time = 62.4
 	assert_str(state.time_text()).is_equal("1:02")
