@@ -100,7 +100,7 @@ func pop_score(world_position: Vector3, points: int) -> void:
 
 
 func _on_score_changed(score: int) -> void:
-	_score_label.text = "SCORE %d" % score
+	_score_label.text = "คะแนน %d" % score
 
 
 func _on_energy_changed(energy: float, max_energy: float) -> void:
@@ -128,13 +128,13 @@ func _on_damage_taken(_amount: float) -> void:
 
 
 func _on_scene_started(index: int) -> void:
-	_scene_label.text = "SCENE %d·%s" % [index, GameState.scene_name()]
+	_scene_label.text = "ด่าน %d·%s" % [index, GameState.scene_name()]
 
 
 func _on_game_over() -> void:
 	# Storyboard screen 8 names the scene the run died on rather than numbering
 	# it — "Mars" is what the player will tell the next person in the queue.
-	_final_score_label.text = "REACHED SCENE %d · %s\nSCORE %d   TIME %s" % [
+	_final_score_label.text = "ไปถึงด่าน %d · %s\nคะแนน %d   เวลา %s" % [
 		GameState.scene_index, GameState.scene_name(),
 		GameState.score, GameState.time_text(),
 	]
@@ -165,15 +165,15 @@ func _on_scene_cleared(index: int, timed_out: bool) -> void:
 		# Storyboard screen 7, and its win line verbatim. The card stays the place
 		# the win is announced; CONTINUE hands off to the router, which records
 		# the run and opens the board under it (screen 9).
-		_cleared_title.text = "Yay!! We protected Earth!"
-		_continue_button.text = "VIEW RANKING  ▶"
+		_cleared_title.text = "เย้!! เราปกป้องโลกไว้ได้แล้ว!"
+		_continue_button.text = "ดูอันดับ  ▶"
 	else:
-		_cleared_title.text = "SCENE %d CLEARED" % index
-		_continue_button.text = "NEXT MISSION"
+		_cleared_title.text = "ผ่านด่าน %d แล้ว!" % index
+		_continue_button.text = "ภารกิจต่อไป"
 	# A scene that runs out of time still counts as held — the storyboard only
 	# ever loses a run on energy — but say so, or the card looks like a bug.
-	var lead := "Time up.  " if timed_out else ""
-	_cleared_summary.text = "%sSCORE %d   TIME %s   QUIZ %d/%d" % [
+	var lead := "หมดเวลา  " if timed_out else ""
+	_cleared_summary.text = "%sคะแนน %d   เวลา %s   ตอบถูก %d/%d" % [
 		lead, GameState.score, GameState.time_text(),
 		GameState.quiz_correct_count, GameState.quiz_total_count,
 	]

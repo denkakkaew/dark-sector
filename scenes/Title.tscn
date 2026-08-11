@@ -49,7 +49,7 @@ offset_bottom = -106.0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.62, 0.7, 0.84, 1)
-text = "MISSION 1 OF 4"
+text = "ภารกิจที่ 1 จาก 4"
 
 [node name="Destination" type="Label" parent="Attract/Caption"]
 anchor_top = 1.0
@@ -96,7 +96,7 @@ horizontal_alignment = 1
 [node name="Tagline" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 26
 theme_override_colors/font_color = Color(0.72, 0.82, 0.95, 1)
-text = "defend the solar system.   learn its secrets."
+text = "ปกป้องระบบสุริยะ   เรียนรู้ความลับของจักรวาล"
 horizontal_alignment = 1
 
 [node name="Gap" type="Control" parent="Layout/Column"]
@@ -110,7 +110,7 @@ theme_override_styles/normal = SubResource("StyleBox_start")
 theme_override_styles/hover = SubResource("StyleBox_start")
 theme_override_styles/pressed = SubResource("StyleBox_start")
 theme_override_styles/focus = SubResource("StyleBox_start")
-text = "▶  START"
+text = "▶  เริ่มเกม"
 
 [node name="Corner" type="Control" parent="."]
 anchor_left = 1.0
@@ -130,7 +130,7 @@ grow_vertical = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_font_sizes/font_size = 22
-text = "🏆  RANKING"
+text = "🏆  อันดับ"
 
 [node name="Version" type="Label" parent="."]
 anchor_left = 1.0

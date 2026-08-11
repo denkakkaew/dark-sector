@@ -90,7 +90,7 @@ theme_override_constants/separation = 16
 [node name="Mission" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.62, 0.72, 0.85, 1)
-text = "MISSION 1 OF 4 · ISS"
+text = "ภารกิจที่ 1 จาก 4 · ISS"
 horizontal_alignment = 1
 
 [node name="Gap" type="Control" parent="Layout/Column"]
@@ -107,7 +107,7 @@ theme_override_constants/separation = 18
 [node name="Badge" type="Label" parent="Layout/Column/Card/CardBox"]
 theme_override_font_sizes/font_size = 34
 theme_override_colors/font_color = Color(1, 0.87, 0.35, 1)
-text = "DID YOU KNOW?"
+text = "รู้หรือไม่?"
 horizontal_alignment = 1
 
 [node name="Rule" type="ColorRect" parent="Layout/Column/Card/CardBox"]
@@ -120,7 +120,7 @@ custom_minimum_size = Vector2(820, 0)
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 30
 theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
-text = "The ISS orbits ~400 km above Earth."
+text = "สถานีอวกาศ ISS โคจรสูงราว 400 กม. เหนือพื้นโลก"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -133,11 +133,11 @@ custom_minimum_size = Vector2(0, 16)
 [node name="Remember" type="Label" parent="Layout/Column"]
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.62, 0.72, 0.85, 1)
-text = "Remember this — the quiz is next!"
+text = "จำไว้ให้ดี — เดี๋ยวมีคำถามรออยู่!"
 horizontal_alignment = 1
 
 [node name="ContinueButton" type="Button" parent="Layout/Column"]
 custom_minimum_size = Vector2(460, 84)
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 28
-text = "START THE QUIZ"
+text = "เริ่มตอบคำถาม"

@@ -51,7 +51,7 @@ func _ready() -> void:
 	var index := GameState.scene_index
 	var accent := CampaignData.accent(index)
 
-	_mission.text = "MISSION %d OF %d · %s" % [
+	_mission.text = "ภารกิจที่ %d จาก %d · %s" % [
 		index, CampaignData.count(), CampaignData.scene_name(index)
 	]
 	# Read, never drawn — see the header. This is the card the briefing promised

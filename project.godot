@@ -49,6 +49,14 @@ window/size/viewport_height=648
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
+[gui]
+
+; The Thai build's font, applied to the default theme so every Label, Button and
+; LineEdit picks it up without a per-node override. The engine default has no
+; Thai glyphs — without this line every screen draws tofu. See the header of the
+; resource itself for the weight and fallback choices.
+theme/custom_font="res://assets/font/ui_font.tres"
+
 [filesystem]
 
 ; Blender source files live under planning/ and are brought in as .glb by

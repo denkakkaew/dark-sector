@@ -14,7 +14,7 @@ extends RefCounted
 ## played over and over by the same kids, and a fact they have already been shown
 ## teaches nothing the second time.
 ##
-## Scene indices are **1-based** everywhere (SCENE 1·ISS … SCENE 4·EARTH) to
+## Scene indices are **1-based** everywhere (ด่าน 1·ISS … ด่าน 4·โลก) to
 ## match the HUD; use `scene()` / `wave()` rather than indexing `SCENES` directly.
 
 ## Flight-mode weights are positional, in `AlienShip.FlightMode` order. Kept as
@@ -46,7 +46,7 @@ const MODE_SWOOP: int = 3
 ## fact card and the quiz screen both read that same one, so the question is
 ## always about the fact the player was just shown. Each entry is self-contained:
 ##
-## - `fact` — the fact card screen's "DID YOU KNOW?". True, and short enough to read
+## - `fact` — the fact card screen's "รู้หรือไม่?". True, and short enough to read
 ##   at a glance; the card is sized for roughly the length of the ones here.
 ## - `question` / `answers` / `correct` — three big touch buttons and the index of
 ##   the right one. The correct index is varied deliberately across the pool: kids
@@ -76,39 +76,41 @@ const MODE_SWOOP: int = 3
 ##   (Mars' is full of dust, and the photographic backdrops bring their own).
 const SCENES: Array = [
 	{
+		# "ISS" stays Latin: it is what the station is called in Thai too, and the
+		# HUD's scene chip has room for three characters, not for สถานีอวกาศนานาชาติ.
 		"name": "ISS",
-		"title": "ISS — First Contact",
+		"title": "สถานีอวกาศ ISS — เผชิญหน้าครั้งแรก",
 		"accent": Color(0.24, 0.55, 0.9),
-		"story": "Alien scouts are attacking the International Space Station — man the turret!",
+		"story": "ยานสอดแนมต่างดาวกำลังบุกสถานีอวกาศนานาชาติ — ประจำป้อมปืนเดี๋ยวนี้!",
 		"quiz": [
 			{
-				"fact": "The ISS orbits ~400 km above Earth at ~28,000 km/h. Astronauts on board see 16 sunrises every day!",
-				"question": "How many sunrises do ISS astronauts see each day?",
-				"answers": ["1", "16", "100"],
+				"fact": "สถานีอวกาศ ISS โคจรสูงราว 400 กม. เหนือพื้นโลก ด้วยความเร็วราว 28,000 กม./ชม. นักบินอวกาศบนสถานีจึงเห็นดวงอาทิตย์ขึ้นถึง 16 ครั้งต่อวัน!",
+				"question": "นักบินอวกาศบน ISS เห็นดวงอาทิตย์ขึ้นวันละกี่ครั้ง?",
+				"answers": ["1 ครั้ง", "16 ครั้ง", "100 ครั้ง"],
 				"correct": 1,
 			},
 			{
-				"fact": "The ISS races all the way around the planet once every 90 minutes — 16 laps of Earth every single day.",
-				"question": "How long does the ISS take to circle Earth once?",
-				"answers": ["About 24 hours", "About a month", "About 90 minutes"],
+				"fact": "ISS วิ่งรอบโลกครบหนึ่งรอบทุก ๆ 90 นาที นั่นคือ 16 รอบโลกในหนึ่งวัน",
+				"question": "ISS ใช้เวลาโคจรรอบโลกหนึ่งรอบนานเท่าไร?",
+				"answers": ["ประมาณ 24 ชั่วโมง", "ประมาณหนึ่งเดือน", "ประมาณ 90 นาที"],
 				"correct": 2,
 			},
 			{
-				"fact": "The ISS runs entirely on sunlight: eight huge solar wings turn it into all the electricity the station needs.",
-				"question": "Where does the ISS get its electricity?",
-				"answers": ["From giant solar panels", "From a very long cable to Earth", "From petrol engines"],
+				"fact": "ISS ใช้พลังงานจากแสงอาทิตย์ล้วน ๆ ปีกแผงโซลาร์เซลล์ยักษ์ทั้งแปดแผงเปลี่ยนแสงเป็นไฟฟ้าทั้งหมดที่สถานีต้องใช้",
+				"question": "ISS ได้ไฟฟ้ามาจากไหน?",
+				"answers": ["จากแผงโซลาร์เซลล์ยักษ์", "จากสายไฟยาวมากที่ต่อลงมาจากโลก", "จากเครื่องยนต์น้ำมัน"],
 				"correct": 0,
 			},
 			{
-				"fact": "The ISS is the biggest thing humans have ever built in space — end to end it is about as long as a football pitch.",
-				"question": "How big is the ISS?",
-				"answers": ["About the size of a bus", "About as long as a football pitch", "As big as the Moon"],
+				"fact": "ISS เป็นสิ่งที่ใหญ่ที่สุดที่มนุษย์เคยสร้างในอวกาศ วัดจากปลายด้านหนึ่งไปอีกด้านยาวพอ ๆ กับสนามฟุตบอลหนึ่งสนาม",
+				"question": "สถานีอวกาศ ISS ใหญ่แค่ไหน?",
+				"answers": ["ประมาณรถบัสหนึ่งคัน", "ยาวพอ ๆ กับสนามฟุตบอล", "ใหญ่เท่าดวงจันทร์"],
 				"correct": 1,
 			},
 			{
-				"fact": "Everything on the ISS floats, so astronauts sleep in sleeping bags clipped to the wall and their tools are tethered down.",
-				"question": "Why do ISS astronauts clip their sleeping bags to the wall?",
-				"answers": ["To keep warm", "To stop the bag getting dirty", "So they don't float away while they sleep"],
+				"fact": "ทุกอย่างบน ISS ลอยได้หมด นักบินอวกาศจึงต้องนอนในถุงนอนที่หนีบติดผนัง และผูกเครื่องมือทุกชิ้นไว้กันลอยหาย",
+				"question": "ทำไมนักบินอวกาศบน ISS ต้องหนีบถุงนอนติดผนัง?",
+				"answers": ["เพื่อให้ร่างกายอบอุ่น", "เพื่อไม่ให้ถุงนอนเปื้อน", "เพื่อไม่ให้ลอยไปมาตอนหลับ"],
 				"correct": 2,
 			},
 		],
@@ -137,39 +139,39 @@ const SCENES: Array = [
 		},
 	},
 	{
-		"name": "MOON",
-		"title": "The Moon — Forward Base",
+		"name": "ดวงจันทร์",
+		"title": "ดวงจันทร์ — ฐานทัพหน้า",
 		"accent": Color(0.62, 0.66, 0.72),
-		"story": "The aliens are building a secret base on the far side of the Moon. Stop the landers!",
+		"story": "มนุษย์ต่างดาวกำลังสร้างฐานลับอยู่ด้านไกลของดวงจันทร์ สกัดยานลงจอดให้ได้!",
 		"quiz": [
 			{
-				"fact": "The Moon is 384,400 km from Earth, and its gravity is only 1/6 of ours. We always see the same side!",
-				"question": "How strong is the Moon's gravity compared to Earth's?",
-				"answers": ["The same", "One sixth", "Double"],
+				"fact": "ดวงจันทร์อยู่ห่างจากโลก 384,400 กม. และมีแรงโน้มถ่วงเพียง 1 ใน 6 ของโลก แถมเรายังเห็นด้านเดิมของมันเสมอ!",
+				"question": "แรงโน้มถ่วงของดวงจันทร์เทียบกับของโลกเป็นเท่าไร?",
+				"answers": ["เท่ากันพอดี", "หนึ่งในหก", "มากกว่าสองเท่า"],
 				"correct": 1,
 			},
 			{
-				"fact": "The Moon has no air, so there is no wind and no rain. The footprints Apollo astronauts left in 1969 are still there today.",
-				"question": "Why are the Apollo footprints still on the Moon?",
-				"answers": ["There is no wind or rain to wipe them away", "They were carved into solid rock", "Astronauts repaint them every year"],
+				"fact": "ดวงจันทร์ไม่มีอากาศ จึงไม่มีทั้งลมและฝน รอยเท้าที่นักบินอวกาศอะพอลโลทิ้งไว้เมื่อปี 1969 จึงยังอยู่ครบจนถึงวันนี้",
+				"question": "ทำไมรอยเท้าของนักบินอะพอลโลถึงยังอยู่บนดวงจันทร์?",
+				"answers": ["ไม่มีลมและฝนมาลบรอย", "รอยถูกสลักลงบนหินแข็ง", "มีคนไปทาสีใหม่ทุกปี"],
 				"correct": 0,
 			},
 			{
-				"fact": "The Moon turns once for every lap around Earth, so the same face always points at us. Nobody saw its far side until 1959!",
-				"question": "Why do we always see the same side of the Moon?",
-				"answers": ["It is held still and never turns", "It turns once for every lap around Earth", "Its other side is invisible"],
+				"fact": "ดวงจันทร์หมุนรอบตัวเองหนึ่งรอบพอดีกับที่โคจรรอบโลกหนึ่งรอบ หน้าเดิมจึงหันมาทางเราเสมอ ไม่มีใครเห็นด้านไกลของมันเลยจนถึงปี 1959!",
+				"question": "ทำไมเราถึงเห็นดวงจันทร์ด้านเดิมเสมอ?",
+				"answers": ["เพราะมันอยู่นิ่ง ไม่หมุนเลย", "เพราะมันหมุนรอบตัวเองหนึ่งรอบต่อการโคจรรอบโลกหนึ่งรอบ", "เพราะอีกด้านหนึ่งมองไม่เห็น"],
 				"correct": 1,
 			},
 			{
-				"fact": "The Moon is 384,400 km away — the Apollo astronauts needed about three days to fly there.",
-				"question": "How long did the Apollo astronauts take to reach the Moon?",
-				"answers": ["About three hours", "About three years", "About three days"],
+				"fact": "ดวงจันทร์อยู่ไกลถึง 384,400 กม. นักบินอวกาศอะพอลโลต้องบินราวสามวันกว่าจะไปถึง",
+				"question": "นักบินอวกาศอะพอลโลใช้เวลาเดินทางไปดวงจันทร์นานเท่าไร?",
+				"answers": ["ประมาณสามชั่วโมง", "ประมาณสามปี", "ประมาณสามวัน"],
 				"correct": 2,
 			},
 			{
-				"fact": "Sound needs air to travel through, and the Moon has none. Standing side by side, the Moonwalkers still had to talk by radio.",
-				"question": "Why did the Moonwalkers talk to each other by radio?",
-				"answers": ["There is no air to carry their voices", "The Moon is far too noisy", "They were miles apart from each other"],
+				"fact": "เสียงต้องอาศัยอากาศในการเดินทาง แต่ดวงจันทร์ไม่มีอากาศเลย ต่อให้ยืนอยู่ข้าง ๆ กัน นักบินอวกาศก็ยังต้องคุยกันผ่านวิทยุ",
+				"question": "ทำไมนักบินอวกาศบนดวงจันทร์ต้องคุยกันทางวิทยุ?",
+				"answers": ["เพราะไม่มีอากาศพาเสียงไปถึงกัน", "เพราะบนดวงจันทร์เสียงดังเกินไป", "เพราะยืนอยู่ห่างกันหลายกิโลเมตร"],
 				"correct": 0,
 			},
 		],
@@ -205,39 +207,39 @@ const SCENES: Array = [
 		},
 	},
 	{
-		"name": "MARS",
-		"title": "Mars — The Mining Raid",
+		"name": "ดาวอังคาร",
+		"title": "ดาวอังคาร — ศึกชิงแร่",
 		"accent": Color(0.82, 0.38, 0.2),
-		"story": "Alien drones are stealing minerals from Mars to fuel their fleet. Stop the ore carriers!",
+		"story": "โดรนต่างดาวกำลังขโมยแร่จากดาวอังคารไปเป็นเชื้อเพลิงให้กองยาน สกัดยานขนแร่ให้ได้!",
 		"quiz": [
 			{
-				"fact": "Mars is red because of iron rust, and it has the tallest volcano in the solar system: Olympus Mons.",
-				"question": "Why does Mars look red?",
-				"answers": ["Its soil is full of iron rust", "It is very hot", "Aliens painted it"],
+				"fact": "ดาวอังคารมีสีแดงเพราะสนิมเหล็กในดิน และยังมีภูเขาไฟที่สูงที่สุดในระบบสุริยะชื่อ โอลิมปัส มอนส์",
+				"question": "ทำไมดาวอังคารถึงดูเป็นสีแดง?",
+				"answers": ["เพราะดินเต็มไปด้วยสนิมเหล็ก", "เพราะมันร้อนมาก", "เพราะมนุษย์ต่างดาวทาสีไว้"],
 				"correct": 0,
 			},
 			{
-				"fact": "A day on Mars is almost the same as ours: the planet turns once every 24 hours and 37 minutes.",
-				"question": "How long is one day on Mars?",
-				"answers": ["Ten times longer than Earth's", "Almost the same as Earth's", "Only ten minutes"],
+				"fact": "หนึ่งวันบนดาวอังคารยาวพอ ๆ กับของเรา ดาวดวงนี้หมุนรอบตัวเองครบหนึ่งรอบทุก 24 ชั่วโมง 37 นาที",
+				"question": "หนึ่งวันบนดาวอังคารยาวแค่ไหน?",
+				"answers": ["ยาวกว่าบนโลกสิบเท่า", "ยาวพอ ๆ กับบนโลก", "แค่สิบนาทีเท่านั้น"],
 				"correct": 1,
 			},
 			{
-				"fact": "Olympus Mons on Mars is the tallest volcano in the solar system — about three times the height of Mount Everest.",
-				"question": "How does Olympus Mons compare with Mount Everest?",
-				"answers": ["About three times taller", "About half as tall", "Exactly the same height"],
+				"fact": "โอลิมปัส มอนส์ บนดาวอังคารคือภูเขาไฟที่สูงที่สุดในระบบสุริยะ สูงราวสามเท่าของยอดเขาเอเวอเรสต์",
+				"question": "โอลิมปัส มอนส์ สูงเทียบกับยอดเขาเอเวอเรสต์อย่างไร?",
+				"answers": ["สูงกว่าราวสามเท่า", "สูงแค่ครึ่งเดียว", "สูงเท่ากันพอดี"],
 				"correct": 0,
 			},
 			{
-				"fact": "Mars has two small, lumpy moons called Phobos and Deimos. They look more like potatoes than like our Moon.",
-				"question": "How many moons does Mars have?",
-				"answers": ["None at all", "Twelve", "Two"],
+				"fact": "ดาวอังคารมีดวงจันทร์เล็ก ๆ ขรุขระสองดวง ชื่อโฟบอสกับดีมอส หน้าตาเหมือนมันฝรั่งมากกว่าดวงจันทร์ของเรา",
+				"question": "ดาวอังคารมีดวงจันทร์กี่ดวง?",
+				"answers": ["ไม่มีเลยสักดวง", "สิบสองดวง", "สองดวง"],
 				"correct": 2,
 			},
 			{
-				"fact": "Mars pulls with only about a third of Earth's gravity, so the same jump would carry you nearly three times as high.",
-				"question": "What would your jump be like on Mars?",
-				"answers": ["Exactly the same as on Earth", "Nearly three times higher", "You could not leave the ground"],
+				"fact": "ดาวอังคารมีแรงโน้มถ่วงราวหนึ่งในสามของโลก กระโดดแรงเท่าเดิมจึงลอยสูงขึ้นได้เกือบสามเท่า",
+				"question": "ถ้ากระโดดบนดาวอังคารจะเป็นอย่างไร?",
+				"answers": ["เหมือนกับบนโลกทุกอย่าง", "ลอยสูงขึ้นเกือบสามเท่า", "กระโดดไม่ขึ้นเลย"],
 				"correct": 1,
 			},
 		],
@@ -279,39 +281,39 @@ const SCENES: Array = [
 		},
 	},
 	{
-		"name": "EARTH",
-		"title": "Earth Orbit — The Last Stand",
+		"name": "โลก",
+		"title": "วงโคจรโลก — ด่านสุดท้าย",
 		"accent": Color(0.86, 0.24, 0.28),
-		"story": "This is it — the alien armada has reached Earth. Hold the line, defender!",
+		"story": "ถึงเวลาแล้ว กองทัพต่างดาวมาถึงโลกของเรา ตั้งรับให้อยู่นะ ผู้พิทักษ์!",
 		"quiz": [
 			{
-				"fact": "Earth's atmosphere and magnetic field protect us from space radiation every single day.",
-				"question": "What shields Earth from space radiation?",
-				"answers": ["Its atmosphere and magnetic field", "Clouds", "Satellites"],
+				"fact": "ชั้นบรรยากาศและสนามแม่เหล็กของโลกคอยปกป้องเราจากรังสีในอวกาศอยู่ทุกวัน",
+				"question": "อะไรคอยปกป้องโลกจากรังสีในอวกาศ?",
+				"answers": ["ชั้นบรรยากาศและสนามแม่เหล็ก", "ก้อนเมฆ", "ดาวเทียม"],
 				"correct": 0,
 			},
 			{
-				"fact": "The air we breathe is mostly nitrogen — about 78% of it. Only about a fifth is the oxygen our bodies use.",
-				"question": "What is most of Earth's air made of?",
-				"answers": ["Oxygen", "Nitrogen", "Carbon dioxide"],
+				"fact": "อากาศที่เราหายใจส่วนใหญ่เป็นไนโตรเจน ราว 78% มีออกซิเจนที่ร่างกายใช้จริงเพียงราวหนึ่งในห้าเท่านั้น",
+				"question": "อากาศของโลกส่วนใหญ่เป็นแก๊สอะไร?",
+				"answers": ["ออกซิเจน", "ไนโตรเจน", "คาร์บอนไดออกไซด์"],
 				"correct": 1,
 			},
 			{
-				"fact": "Oceans cover about 71% of Earth's surface. That water is why our planet looks blue from space.",
-				"question": "How much of Earth's surface is covered by ocean?",
-				"answers": ["About one tenth", "About one third", "About seven tenths"],
+				"fact": "มหาสมุทรปกคลุมพื้นผิวโลกราว 71% น้ำทั้งหมดนี่เองที่ทำให้โลกของเราดูเป็นสีน้ำเงินเมื่อมองจากอวกาศ",
+				"question": "พื้นผิวโลกถูกมหาสมุทรปกคลุมมากแค่ไหน?",
+				"answers": ["ราวหนึ่งในสิบ", "ราวหนึ่งในสาม", "ราวเจ็ดในสิบ"],
 				"correct": 2,
 			},
 			{
-				"fact": "Space officially begins just 100 km straight up — a shorter trip than many car journeys, if only you could drive upwards!",
-				"question": "How far up does space begin?",
-				"answers": ["About 100 km", "About 100 metres", "About a million km"],
+				"fact": "อวกาศเริ่มต้นที่ความสูงเพียง 100 กม. เหนือหัวเรา ใกล้กว่าการนั่งรถเที่ยวหลายทริปเสียอีก ถ้าขับรถขึ้นข้างบนได้นะ!",
+				"question": "อวกาศเริ่มต้นที่ความสูงเท่าไร?",
+				"answers": ["ราว 100 กิโลเมตร", "ราว 100 เมตร", "ราวหนึ่งล้านกิโลเมตร"],
 				"correct": 0,
 			},
 			{
-				"fact": "Earth is racing around the Sun at about 107,000 km/h, carrying everyone standing on it along for the ride.",
-				"question": "How fast is Earth travelling around the Sun?",
-				"answers": ["It is standing still", "About 100 km/h, like a car", "About 100,000 km/h"],
+				"fact": "โลกกำลังวิ่งรอบดวงอาทิตย์ด้วยความเร็วราว 107,000 กม./ชม. พาทุกคนที่ยืนอยู่บนนั้นไปด้วยกันหมด",
+				"question": "โลกโคจรรอบดวงอาทิตย์เร็วแค่ไหน?",
+				"answers": ["อยู่นิ่ง ๆ ไม่ได้เคลื่อนที่", "ราว 100 กม./ชม. เท่ารถยนต์", "ราว 100,000 กม./ชม."],
 				"correct": 2,
 			},
 		],
@@ -384,7 +386,7 @@ static func wave(index: int) -> Dictionary:
 	return scene(index)["wave"]
 
 
-## Display name for the HUD's scene indicator ("ISS", "MOON", …).
+## Display name for the HUD's scene indicator ("ISS", "ดวงจันทร์", …).
 static func scene_name(index: int) -> String:
 	return scene(index)["name"]
 

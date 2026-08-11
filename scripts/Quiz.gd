@@ -11,7 +11,7 @@ const FEEDBACK_SECONDS: float = 1.8
 const COUNTDOWN_STEP: float = 0.6
 const CORRECT_COLOR := Color(0.25, 0.92, 0.62)
 const WRONG_COLOR := Color(0.95, 0.42, 0.38)
-const LETTERS: PackedStringArray = ["A", "B", "C"]
+const LETTERS: PackedStringArray = ["ก", "ข", "ค"]
 
 @onready var _accent_wash: ColorRect = $AccentWash
 @onready var _question: Label = $Layout/Column/Question
@@ -78,10 +78,10 @@ func _on_answer_pressed(chosen: int) -> void:
 	_mark_answers(chosen, correct)
 	_feedback.add_theme_color_override("font_color", CORRECT_COLOR if correct else WRONG_COLOR)
 	if correct:
-		_feedback.text = "CORRECT!   Energy fully charged   +%d bonus" % GameState.QUIZ_BONUS
+		_feedback.text = "ถูกต้อง!   พลังงานเต็มถัง   +%d คะแนนโบนัส" % GameState.QUIZ_BONUS
 	else:
 		var answers: Array = GameState.quiz_entry()["answers"]
-		_feedback.text = "Good try! The answer is %s — %s" % [
+		_feedback.text = "เกือบแล้ว! คำตอบที่ถูกคือ %s — %s" % [
 			LETTERS[_correct_index], answers[_correct_index]
 		]
 
@@ -120,7 +120,7 @@ func _run_countdown() -> void:
 		# awaits above would otherwise carry on touching freed nodes.
 		if not is_inside_tree():
 			return
-	_countdown.text = "LAUNCH!"
+	_countdown.text = "ลุยเลย!"
 	_launch()
 
 

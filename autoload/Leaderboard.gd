@@ -19,7 +19,7 @@ const MAX_ENTRIES: int = 20
 const NAME_LIMIT: int = 12
 ## Shown for a run recorded with no name, which only happens when the game is
 ## launched straight into a gameplay scene during development.
-const ANONYMOUS: String = "CADET"
+const ANONYMOUS: String = "นิรนาม"
 
 ## Every row currently on the board, best first.
 var entries: Array[Dictionary] = []
