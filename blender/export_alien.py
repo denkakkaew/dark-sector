@@ -55,10 +55,18 @@ from mathutils import Matrix, Vector
 # it replaces, which is what a disc needs to carry the same visual mass.
 GAME_SCALE = 1.9
 
-# Triangle budget for the whole ship, after decimation. Well under the turret's
-# 25k: a wave puts several of these on screen at once, they are never closer
-# than a few units to the camera, and the silhouette is mostly smooth curves
-# that survive a collapse cleanly.
+# Decimation budget for the whole ship. Well under the turret's 25k: a wave puts
+# several of these on screen at once, they are never closer than a few units to
+# the camera, and the saucer's silhouette is mostly smooth curves that survive a
+# collapse cleanly.
+#
+# It buys less than its name suggests — it is divided by the source's *face*
+# count, and Tripo's meshes are quads, so the saucer leaves here at ~13k
+# triangles rather than 9k. Treat it as a dial, not as a promise, and read the
+# `exported_tris` the export prints for what actually shipped.
+#
+# A ship built out of flat plating rather than curves needs a bigger one: see
+# `budget` in export_alien_variants.py.
 TRI_BUDGET = 9000
 
 # Never decimate a single part below this, so the rim lights and the pilot's
@@ -76,6 +84,10 @@ JPEG_QUALITY = 85
 # Metallic stays low on purpose: GL-Compatibility has no reflection probe or sky
 # here, so metal has nothing to reflect and goes black.
 SURFACE_FINISH = {"roughness": 0.5, "metallic": 0.05}
+
+# The only textured inputs a ship keeps; see _base_colour_only for why the rest
+# have to go.
+KEEP_LINKED = ("Base Color", "Alpha")
 
 # The empty every mesh in the .blend hangs off.
 SOURCE_PARENT = "ROOT"
@@ -118,34 +130,61 @@ def _vert_bounds(objs):
     return lo, hi
 
 
-def _transform():
+def _transform(yaw=None):
     """World -> export-space matrix.
 
-    Moves the saucer's centre to the origin, yaws it a quarter turn so the
-    pilot ends up facing Godot's +Z after the glTF Y-up conversion, and scales
-    into game units.
+    Moves the saucer's centre to the origin, yaws it so the pilot ends up
+    facing Godot's +Z after the glTF Y-up conversion, and scales into game
+    units.
 
-    **The source model must face +X in Blender** — check it in the Numpad-3
-    (Right) view, where you should be looking the pilot in the face. Don't try
-    to infer the facing from the bounds: the saucer is very nearly as wide as
-    it is long, so which axis is "longer" flips with small edits to the model
-    and says nothing about which end is the nose.
+    **This model faces +X in Blender** — check it in the Numpad-3 (Right) view,
+    where you should be looking the pilot in the face. Don't try to infer the
+    facing from the bounds: the saucer is very nearly as wide as it is long, so
+    which axis is "longer" flips with small edits to the model and says nothing
+    about which end is the nose.
 
     The yaw direction was settled in the engine, not on paper: park a ship
     close in front of the gameplay camera and look at its face. Blender's Y-up
     conversion sends Blender -Y to Godot +Z, which is the way the ships fly, so
-    the nose has to end up on -Y — hence the -90 yaw, swinging it round from
-    +X. (The mirror of this, +90, presents the dome to the player and reads as
-    the saucer flying home tail-first.)
+    the nose has to end up on -Y — hence the -90 default, swinging it round
+    from +X. (The mirror of this, +90, presents the dome to the player and
+    reads as the saucer flying home tail-first.)
+
+    `export_alien_variants.py` passes a different `yaw` for each ship in the
+    pool, because the other two models came out of Tripo pointing elsewhere.
     """
     lo, hi = _vert_bounds(_meshes())
     centre = (lo + hi) * 0.5
     scale = Matrix.Scale(GAME_SCALE, 4)
-    face_forward = Matrix.Rotation(-math.pi / 2, 4, "Z")
+    face_forward = Matrix.Rotation(-math.pi / 2 if yaw is None else yaw, 4, "Z")
     return scale @ face_forward @ Matrix.Translation(-centre)
 
 
 # --- throwaway copies -------------------------------------------------------
+
+
+def _base_colour_only(mat, bsdf):
+    """Strip every map but base colour off a Principled BSDF.
+
+    Tripo returns some models with a basecolor map only and others carrying a
+    packed metallic/roughness map and a normal map as well, and that difference
+    is not cosmetic. SURFACE_FINISH below is only written into sockets that
+    aren't already linked, so a ship that arrives with those maps silently keeps
+    Tripo's own values — metallic 1.0 included — and on GL-Compatibility, with
+    no reflection probe or sky to reflect, a fully metallic hull renders as a
+    black blob. The first export of `alien_ship_3.glb` did exactly that.
+
+    Dropping the maps is also what keeps the fleet one material family: every
+    ship then takes its finish from the same two numbers, and the ones that
+    carry three maps per part stop costing three times the texture memory of the
+    ones that carry one. At the size an alien is on screen, none of it is
+    missed.
+    """
+    for socket in bsdf.inputs:
+        if socket.name in KEEP_LINKED:
+            continue
+        for link in list(socket.links):
+            mat.node_tree.links.remove(link)
 
 
 def _retexture(obj, cache, trash):
@@ -167,6 +206,7 @@ def _retexture(obj, cache, trash):
         if mat.use_nodes:
             for node in mat.node_tree.nodes:
                 if node.type == "BSDF_PRINCIPLED":
+                    _base_colour_only(mat, node)
                     for key, value in SURFACE_FINISH.items():
                         socket = node.inputs.get(key.capitalize())
                         if socket is not None and not socket.is_linked:
@@ -185,11 +225,11 @@ def _retexture(obj, cache, trash):
         slot.material = mat
 
 
-def _build_copies(matrix, trash):
+def _build_copies(matrix, trash, budget=None):
     """Duplicate every part, transform it, decimate it and join the lot."""
     objs = _meshes()
     total = sum(len(o.data.polygons) for o in objs)
-    ratio = min(1.0, TRI_BUDGET / float(total))
+    ratio = min(1.0, (budget or TRI_BUDGET) / float(total))
 
     holder = bpy.data.collections.new("__export_tmp")
     trash["collections"].append(holder)
@@ -269,17 +309,22 @@ def _project_root():
     return os.path.abspath(os.getcwd())
 
 
-def export_alien(out_dir=None):
-    """Export the saucer. Returns a dict of what it measured."""
-    matrix = _transform()
+def export_alien(out_dir=None, out_file=None, yaw=None, budget=None):
+    """Export the saucer currently in the scene. Returns what it measured.
+
+    `out_file`, `yaw` and `budget` exist for `export_alien_variants.py`, which
+    drives this same pipeline over the other ships in the pool; called bare it
+    exports `AlienShip.blend` exactly as it always did.
+    """
+    matrix = _transform(yaw)
     trash = {k: [] for k in ("objects", "meshes", "materials", "images", "collections")}
 
     root = out_dir or os.path.join(_project_root(), OUT_DIR)
     os.makedirs(root, exist_ok=True)
-    path = os.path.join(root, OUT_FILE)
+    path = os.path.join(root, out_file or OUT_FILE)
 
     try:
-        src_tris, ratio = _build_copies(matrix, trash)
+        src_tris, ratio = _build_copies(matrix, trash, budget)
         joined = _join(trash)
 
         bpy.ops.export_scene.gltf(

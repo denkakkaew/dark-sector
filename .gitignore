@@ -13,6 +13,10 @@
 # Local Claude Code settings (machine-specific)
 .claude/settings.local.json
 
+# Bytecode from the Blender export scripts — export_alien_variants.py imports
+# export_alien.py as a module, and Python caches it next to the source.
+__pycache__/
+
 # Local dev helpers / logs (machine-specific)
 run.log
 run-game.bat

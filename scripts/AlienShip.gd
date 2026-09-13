@@ -11,6 +11,24 @@ signal got_through
 const HIT_EFFECT_SCENE := preload("res://scenes/HitEffect.tscn")
 const EARTH_Z: float = 9.0
 
+## The hulls the fleet is drawn from, one picked per ship as it spawns.
+##
+## They are interchangeable by construction: blender/export_alien.py and
+## blender/export_alien_variants.py write every one of them centred on its own
+## bounds, facing +Z, and inside the same footprint — so there is no per-hull
+## transform here and the one collision shape in AlienShip.tscn covers all
+## three. Adding a fourth is an export plus a line in this array.
+##
+## The pick is plain random, with no "don't repeat the last one" of the kind
+## CampaignData's fact pool needs. Two ships in a wave sharing a hull reads as a
+## fleet flying in formation; two runs in a row teaching the same fact reads as
+## a broken kiosk. Only one of those is worth code.
+const HULLS: Array[PackedScene] = [
+	preload("res://assets/object/alien/alien_ship.glb"),
+	preload("res://assets/object/alien/alien_ship_2.glb"),
+	preload("res://assets/object/alien/alien_ship_3.glb"),
+]
+
 enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
 
 @export var speed: float = 8.0
@@ -46,6 +64,7 @@ var _swoop_freq: float = 0.0
 
 func _ready() -> void:
 	add_to_group("aliens")
+	_wear_a_hull()
 	area_entered.connect(_on_area_entered)
 	_wobble_time = randf() * TAU
 	_wobble_amp_x = randf_range(0.4, 1.2)
@@ -56,6 +75,19 @@ func _ready() -> void:
 		if material != null:
 			_armour_alpha = material.albedo_color.a
 			_armour_glow = material.emission_energy_multiplier
+
+func _wear_a_hull() -> void:
+	"""Hang one of the fleet's hulls under `Model`.
+
+	`Model` is an empty in the scene rather than a fixed mesh precisely so this
+	can choose. Everything else — the steering, the armour damage, `_explode`
+	hiding it — only ever talks to that parent node, so the rest of the script
+	neither knows nor cares which ship it is wearing. The ore carrier inherits
+	this along with everything else and varies too: what marks a carrier out at a
+	glance is its size, its armour shell and its glow, not its silhouette.
+	"""
+	$Model.add_child(HULLS[randi() % HULLS.size()].instantiate())
+
 
 func _physics_process(delta: float) -> void:
 	if _destroyed:
