@@ -11,7 +11,34 @@ signal got_through
 const HIT_EFFECT_SCENE := preload("res://scenes/HitEffect.tscn")
 const EARTH_Z: float = 9.0
 
+## The hulls the fleet is drawn from, one picked per ship as it spawns.
+##
+## They are interchangeable by construction: blender/export_rebuild.py writes
+## every one of them centred on its own bounds and facing +Z, so there is no
+## per-hull transform here. They are *not* the same size any more — the gunship
+## and the heavy cruiser are well over the saucer — so the collision box is
+## measured off whichever hull a ship is wearing (see `_fit_collision_to`)
+## instead of being one shape for all. Adding a fourth is an export plus a line
+## in this array.
+##
+## The pick is plain random, with no "don't repeat the last one" of the kind
+## CampaignData's fact pool needs. Two ships in a wave sharing a hull reads as a
+## fleet flying in formation; two runs in a row teaching the same fact reads as
+## a broken kiosk. Only one of those is worth code.
+const HULLS: Array[PackedScene] = [
+	preload("res://assets/object/alien/alien_ship.glb"),
+	preload("res://assets/object/alien/alien_ship_2.glb"),
+	preload("res://assets/object/alien/alien_ship_3.glb"),
+]
+
 enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
+
+## A hull this ship always wears, instead of drawing one from `HULLS`. The ore
+## carrier sets it: it is its own ship, not a scout in armour.
+@export var hull_override: PackedScene
+
+## Hit box per hull, measured once off the hull's own geometry and then shared.
+static var _hull_boxes: Dictionary = {}
 
 @export var speed: float = 8.0
 @export var score_value: int = 100
@@ -46,6 +73,7 @@ var _swoop_freq: float = 0.0
 
 func _ready() -> void:
 	add_to_group("aliens")
+	_wear_a_hull()
 	area_entered.connect(_on_area_entered)
 	_wobble_time = randf() * TAU
 	_wobble_amp_x = randf_range(0.4, 1.2)
@@ -56,6 +84,57 @@ func _ready() -> void:
 		if material != null:
 			_armour_alpha = material.albedo_color.a
 			_armour_glow = material.emission_energy_multiplier
+
+func _wear_a_hull() -> void:
+	"""Hang one of the fleet's hulls under `Model`.
+
+	`Model` is an empty in the scene rather than a fixed mesh precisely so this
+	can choose. Everything else — the steering, the armour damage, `_explode`
+	hiding it — only ever talks to that parent node, so the rest of the script
+	neither knows nor cares which ship it is wearing. The ore carrier inherits
+	this along with everything else and varies too: what marks a carrier out at a
+	glance is its size, its armour shell and its glow, not its silhouette.
+	"""
+	var hull_scene: PackedScene = hull_override if hull_override != null else HULLS[randi() % HULLS.size()]
+	var hull := hull_scene.instantiate()
+	$Model.add_child(hull)
+	_fit_collision_to(hull_scene, hull)
+
+
+func _fit_collision_to(hull_scene: PackedScene, hull: Node3D) -> void:
+	"""Size the hit box to the hull the ship is wearing.
+
+	The box is the hull's tight bounds, measured over its actual vertices — not
+	`mesh.get_aabb()` pushed through the node's transform, which over-reports on
+	a hull whose glTF node carries a rotation. A near miss counting as a hit is
+	the friendly side to err on for this audience, so there is no margin taken
+	off; the geometry is the minimum.
+	"""
+	if not _hull_boxes.has(hull_scene):
+		var box := BoxShape3D.new()
+		box.size = _hull_bounds(hull).size
+		_hull_boxes[hull_scene] = box
+	$CollisionShape3D.shape = _hull_boxes[hull_scene]
+
+
+func _hull_bounds(hull: Node3D) -> AABB:
+	var bounds := AABB()
+	var started := false
+	var to_model: Transform3D = $Model.global_transform.affine_inverse()
+	for mesh in hull.find_children("*", "MeshInstance3D", true, false):
+		var instance := mesh as MeshInstance3D
+		var xform: Transform3D = to_model * instance.global_transform
+		for surface in instance.mesh.get_surface_count():
+			var vertices: PackedVector3Array = instance.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+			for vertex in vertices:
+				var point := xform * vertex
+				if started:
+					bounds = bounds.expand(point)
+				else:
+					bounds = AABB(point, Vector3.ZERO)
+					started = true
+	return bounds
+
 
 func _physics_process(delta: float) -> void:
 	if _destroyed:

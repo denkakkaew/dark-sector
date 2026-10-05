@@ -170,6 +170,16 @@ func test_every_scene_has_a_look_the_battlefield_can_be_dressed_from() -> void:
 				"Scene %d's backdrop image is missing: %s" % [i, look["photo"]["texture"]]
 			).is_true()
 
+		# A 3D set is optional (the other scenes still use their painting), but
+		# one that is named has to exist, or the scene loses its whole battlefield
+		# with only a log line to say so.
+		if look.has("set"):
+			assert_bool(ResourceLoader.exists(look["set"])).override_failure_message(
+				"Scene %d's set is missing: %s" % [i, look["set"]]
+			).is_true()
+		if look["photo"].has("distance"):
+			assert_float(look["photo"]["distance"]).is_greater(48.0)
+
 		for body in look["bodies"]:
 			assert_float(body["radius"]).is_greater(0.0)
 			assert_float(body["mottle"]).is_between(0.0, 1.0)

@@ -121,11 +121,17 @@ const SCENES: Array = [
 			"ambient": Color(0.12, 0.12, 0.18),
 			"sun": {"color": Color(1, 1, 1), "energy": 0.35},
 			"fill": {"color": Color(0.88, 0.92, 1), "energy": 0.55},
+			# The painted Earth limb stays: it is the scene's best feature and a 3D
+			# globe could not match its sharpness across half the screen. It is
+			# pushed far back so the 3D station — trusses, a module, a Soyuz, the
+			# robot arm and solar arrays at the screen edges — can stand in front.
 			"photo": {
 				"visible": true,
 				"texture": "res://assets/backdrop/space_earth.png",
 				"tint": Color(0.7, 0.7, 0.7),
+				"distance": 220.0,
 			},
+			"set": "res://scenes/sets/ISSSet.tscn",
 			"bodies": [],
 			"stars": 0.0,
 		},
@@ -175,12 +181,11 @@ const SCENES: Array = [
 				"correct": 0,
 			},
 		],
-		# No air to soften anything: a hard white sun and a black sky. The other
-		# surface scene's rule applies here too — the backdrop paints its own
-		# regolith, horizon, star field and the storyboard's small blue Earth, so
-		# the procedural sphere, the second marble and the generated stars are all
-		# gone. Each would have doubled something the image already has, and the
-		# ground sphere would have cut the alien base in half.
+		# No air to soften anything: a hard white sun and a black sky. The ground,
+		# the horizon ridge, the alien base and the landing pads are a real 3D set
+		# now (`set`); what stays painted is only the star field behind it, hung
+		# far back (`distance`) so the set can stand in front of it. Earth is the
+		# one procedural body: the storyboard's small blue marble over the ridge.
 		"look": {
 			"space": Color(0.01, 0.01, 0.02),
 			"ambient": Color(0.1, 0.1, 0.13),
@@ -188,13 +193,20 @@ const SCENES: Array = [
 			"fill": {"color": Color(0.6, 0.65, 0.78), "energy": 0.18},
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/moon_surface.png",
-				# Straight grey, no colour shift: unlike Mars there is no cast to
-				# correct, only a bright lit foreground to knock back so the
-				# turret stays in front of the regolith instead of in it.
-				"tint": Color(0.62, 0.62, 0.64),
+				"texture": "res://assets/backdrop/sky_stars.png",
+				"tint": Color(0.92, 0.92, 0.96),
+				"distance": 330.0,
 			},
-			"bodies": [],
+			"set": "res://scenes/sets/MoonSet.tscn",
+			"bodies": [
+				{
+					"position": Vector3(-95.0, 62.0, -250.0),
+					"radius": 9.0,
+					"color": Color(0.22, 0.45, 0.9),
+					"mottle": 0.45,
+					"emission": 0.55,
+				},
+			],
 			"stars": 0.0,
 		},
 		"wave": {
@@ -254,20 +266,24 @@ const SCENES: Array = [
 		# would only cut the outpost in half.
 		"look": {
 			# The sky is the only one in the campaign that isn't black. Barely any
-			# of it survives behind the photo, but it has to agree with the image's
-			# own haze at the edges rather than framing it in a darker band.
+			# of it survives behind the set, but it has to agree with the haze at
+			# the horizon rather than framing it in a darker band.
 			"space": Color(0.4, 0.21, 0.16),
 			"ambient": Color(0.34, 0.2, 0.16),
 			"sun": {"color": Color(1, 0.85, 0.68), "energy": 0.7},
 			"fill": {"color": Color(1, 0.66, 0.5), "energy": 0.4},
+			# The orange sky is the one painted thing left; the colony, the rig,
+			# the mesas and the ground are a real 3D set, hung in front of it.
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/mars_surface.png",
-				# Knocked further back than Earth's, and towards grey: the image is
-				# a saturated orange edge to edge, and the aliens have to stay the
-				# most colourful thing on the screen.
-				"tint": Color(0.55, 0.51, 0.52),
+				"texture": "res://assets/backdrop/sky_mars.png",
+				"tint": Color(1, 1, 1),
+				"distance": 330.0,
 			},
+			"set": "res://scenes/sets/MarsSet.tscn",
+			# Dust: distance blurs toward the sky's own horizon colour, so the far
+			# mesas fade the way the painting's do.
+			"fog": {"color": Color(0.86, 0.5, 0.33), "density": 0.0045},
 			"bodies": [],
 			"stars": 0.0,
 		},
@@ -327,17 +343,22 @@ const SCENES: Array = [
 			"ambient": Color(0.2, 0.07, 0.09),
 			"sun": {"color": Color(1, 0.94, 0.92), "energy": 0.3},
 			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.5},
+			# The painted night sky is all that is left of the photograph. The city
+			# below it — street grid, ~2,500 lit buildings, river, light-trail roads,
+			# a golden bridge and the landmark towers — is a real 3D set, hung 120 m
+			# below the deck so the camera looks *down* on it as the painting does.
+			# The sky is pushed out to 3 km because the city runs to 1.5 km, and
+			# anything behind the sky quad is hidden.
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/earth_city.png",
-				# The lightest knock-back in the campaign, and barely shifted: a
-				# night city is already dark and mostly black, so the usual push
-				# would put the lights out. The small warm bias is the alert light
-				# reaching the skyline.
-				"tint": Color(0.86, 0.74, 0.76),
+				"texture": "res://assets/backdrop/sky_earth_night.png",
+				"tint": Color(0.95, 0.88, 0.9),
+				"distance": 3000.0,
 			},
+			"set": "res://scenes/sets/EarthSet.tscn",
+			# Night haze: the far city fades into a blue glow at the horizon.
+			"fog": {"color": Color(0.13, 0.15, 0.33), "density": 0.0012},
 			"bodies": [],
-			# None: the photograph covers the whole frustum and brings its own.
 			"stars": 0.0,
 		},
 		"wave": {

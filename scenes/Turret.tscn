@@ -10,9 +10,9 @@ script = ExtResource("1")
 [node name="Base" parent="." instance=ExtResource("2")]
 
 [node name="AimPivot" type="Node3D" parent="."]
-position = Vector3(0, 1.219, 0)
+position = Vector3(0, 1.395, 0)
 
 [node name="Gun" parent="AimPivot" instance=ExtResource("3")]
 
 [node name="Muzzle" type="Marker3D" parent="AimPivot"]
-position = Vector3(0, 0.038, -1.657)
+position = Vector3(0, 0.225, -1.541)

@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+; Written by blender/make_iss_set_scene.py from blender/iss_layout.py - move
+; parts in the layout, or by hand here (a re-run rewrites this file).
+; A station module drifting slowly across, below the turret and over the
+; painted Earth limb. It stays under the alien flight lanes.
+
+[ext_resource type="PackedScene" path="res://assets/object/iss/iss_module.glb" id="1"]
+[ext_resource type="Script" path="res://scripts/Drift.gd" id="2"]
+
+[node name="ISSSet" type="Node3D"]
+
+[node name="Module" parent="." instance=ExtResource("1")]
+transform = Transform3D(0.8182, 0, 0, 0, 0.8182, 0, 0, 0, 0.8182, -75, -5, -30)
+script = ExtResource("2")
+velocity = Vector3(2, 0, 0)
+wrap_from = -80
+wrap_to = 80

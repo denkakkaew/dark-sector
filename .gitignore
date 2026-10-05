@@ -13,6 +13,10 @@
 # Local Claude Code settings (machine-specific)
 .claude/settings.local.json
 
+# Bytecode from the Blender export scripts — export_alien_variants.py imports
+# export_alien.py as a module, and Python caches it next to the source.
+__pycache__/
+
 # Local dev helpers / logs (machine-specific)
 run.log
 run-game.bat
@@ -22,3 +26,8 @@ export-web.bat
 # Godot also skips this dir via planning/.gdignore, and the Web export
 # preset excludes it, so it never reaches docs/index.pck.
 planning/
+
+# Raw 3D-generator downloads for the scene rebuild (blender/scene_rebuild_prompts.md).
+# 50-100 MB each before decimation; only the processed exports under assets/ ship.
+# temp/.gdignore keeps Godot from importing them as well.
+/temp/

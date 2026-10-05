@@ -1,12 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/AlienShip.gd" id="1"]
-[ext_resource type="PackedScene" path="res://assets/object/alien/alien_ship.glb" id="2"]
 
-; Sized to the saucer's own bounds, as measured and printed by
-; blender/export_alien.py — re-run that script and update these if the model
-; changes. The disc doesn't fill the box's corners, which just makes a near
-; miss count as a hit; that is the friendly side to err on for this audience.
+; A placeholder: AlienShip._fit_collision_to() replaces this shape with one
+; measured off whichever hull the ship wears, because the hulls are not the same
+; size. It is still here so the node has a valid shape in the editor.
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1.93, 1.15, 1.87)
 
@@ -14,9 +12,11 @@ size = Vector3(1.93, 1.15, 1.87)
 script = ExtResource("1")
 speed = 8.0
 
-; The model is exported centred on its own bounds and facing +Z, so it needs no
-; transform here: it already looks down the axis it flies along, at the player.
-[node name="Model" parent="." instance=ExtResource("2")]
+; Deliberately empty: AlienShip._wear_a_hull() hangs a randomly drawn hull here
+; as the ship spawns. Every hull is exported centred on its own bounds and
+; facing +Z, so none of them needs a transform — they already look down the axis
+; they fly along, at the player.
+[node name="Model" type="Node3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_1")

@@ -7,6 +7,8 @@
 # looking like scene 1 whichever scene you were on. Nothing on screen said so.
 extends GdUnitTestSuite
 
+const SceneLookScript := preload("res://scripts/SceneLook.gd")
+
 
 func _open_game() -> Node:
 	var game: Node = auto_free(load("res://scenes/Game.tscn").instantiate())
@@ -77,3 +79,49 @@ func test_each_scene_hangs_its_own_backdrop_at_the_images_own_shape() -> void:
 		assert_float(size.x / size.y).is_equal_approx(
 			float(texture.get_width()) / float(texture.get_height()), 0.001
 		)
+
+
+func test_a_scene_with_a_set_builds_it_and_the_next_scene_drops_it() -> void:
+	# A set is what replaces a painted backdrop with real ground and buildings, so
+	# one that silently didn't load leaves a scene with an empty black field.
+	var game := _open_game()
+	var look := game.get_node("SceneLook")
+	for index in range(1, CampaignData.count() + 1):
+		look.apply(index)
+		await get_tree().process_frame
+		var expected: Dictionary = CampaignData.look(index)
+		var set_root: Node = look.get_node("Set")
+		assert_int(set_root.get_child_count()).is_equal(1 if expected.has("set") else 0)
+
+
+func test_a_far_sky_is_pushed_back_along_its_own_ray_and_scaled_to_match() -> void:
+	# The sky must look identical from the camera, so distance and size grow
+	# together; one without the other would be a different, cropped sky.
+	var game := _open_game()
+	var backdrop: MeshInstance3D = game.get_node("Backdrop")
+	for index in range(1, CampaignData.count() + 1):
+		var photo: Dictionary = CampaignData.look(index)["photo"]
+		if not photo["visible"]:
+			continue
+		game.get_node("SceneLook").apply(index)
+		var far: float = float(photo.get("distance", SceneLookScript.PHOTO_AUTHORED_DISTANCE)) / SceneLookScript.PHOTO_AUTHORED_DISTANCE
+		# The quad is authored 48.088 m out, straight ahead of the camera's -Z.
+		assert_float(backdrop.position.z).is_equal_approx(-SceneLookScript.PHOTO_AUTHORED_DISTANCE * far, 0.01)
+		assert_float((backdrop.mesh as QuadMesh).size.x).is_equal_approx(SceneLookScript.PHOTO_WIDTH * far, 0.01)
+
+
+func test_only_a_scene_with_haze_has_fog_and_the_sky_is_never_hazed() -> void:
+	# Mars' dust is fog; the other scenes are vacuum and must not inherit it from
+	# the scene before. The painted sky hangs hundreds of metres out, where any fog
+	# would wash it to one flat colour, so it opts out regardless.
+	var game := _open_game()
+	var backdrop: MeshInstance3D = game.get_node("Backdrop")
+	for index in range(1, CampaignData.count() + 1):
+		game.get_node("SceneLook").apply(index)
+		var expected: Dictionary = CampaignData.look(index)
+		var environment: Environment = game.get_node("WorldEnvironment").environment
+		assert_bool(environment.fog_enabled).is_equal(expected.has("fog"))
+		if expected.has("fog"):
+			assert_float(environment.fog_density).is_equal_approx(expected["fog"]["density"], 0.0001)
+		if expected["photo"]["visible"]:
+			assert_bool((backdrop.get_surface_override_material(0) as StandardMaterial3D).disable_fog).is_true()
