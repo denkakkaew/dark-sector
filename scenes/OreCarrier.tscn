@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 ; Mars' armoured ore carrier: the same saucer, inherited so it keeps every fix
 ; the scout gets, with the trade the storyboard asks for — slow and tough, worth
@@ -6,6 +6,7 @@
 ; and are applied by the spawner; what is authored here is the look.
 
 [ext_resource type="PackedScene" path="res://scenes/AlienShip.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://assets/object/alien/alien_ore_carrier.glb" id="2"]
 
 ; A saucer-shaped bubble around the hull: the armour, and the reason a carrier
 ; is picked out of a wave at a glance. Unshaded so it glows evenly from every
@@ -31,6 +32,8 @@ rings = 12
 ; Armour, score and size are set by the spawner from CampaignData.ORE_CARRIER,
 ; so this scene carries the look and the table carries the balance.
 [node name="OreCarrier" instance=ExtResource("1")]
+; Its own hull — purple hauler with cargo pods — rather than a scout in armour.
+hull_override = ExtResource("2")
 
 [node name="Armour" type="MeshInstance3D" parent="."]
 ; Squashed to the saucer's proportions, so the shell hugs the hull rather than

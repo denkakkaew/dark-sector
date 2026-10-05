@@ -46,6 +46,11 @@ IdleWatch="*res://autoload/IdleWatch.gd"
 ; or resizing scales the picture instead of changing it.
 window/size/viewport_width=1152
 window/size/viewport_height=648
+; The kiosk runs fullscreen. 3 is exclusive fullscreen, which on a touchscreen
+; avoids a title bar a child can poke at; the "keep" aspect below letterboxes
+; the 16:9 picture on any other panel. Browsers ignore this, so the web build is
+; unaffected. Tools that need a fixed size (tools/Shoot.gd) switch back to windowed.
+window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 

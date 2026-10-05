@@ -1,12 +1,12 @@
 # gdUnit4 test suite for the alien hull pool.
 #
-# Three hulls now share one AlienShip scene, one script and one collision shape,
-# and the whole arrangement rests on a claim the export scripts make and nothing
-# in the engine enforces: that every hull is centred on its own bounds, faces the
-# way the ships fly, and fits inside the same box. Which hull a ship is wearing
-# is invisible to the rest of the code, so a hull that broke that claim would
-# break it quietly — an off-centre ship that banks around a point outside itself,
-# or one the lasers pass through at the edges.
+# Three hulls share one AlienShip scene and one script, and the arrangement rests
+# on claims the export scripts make and nothing in the engine enforces: that every
+# hull is centred on its own bounds and that the ship's hit box is the size of the
+# hull it is wearing. Which hull a ship wears is invisible to the rest of the
+# code, so a hull that broke either would break it quietly — an off-centre ship
+# that banks around a point outside itself, or one the lasers pass through at the
+# edges.
 #
 # What can't be tested here is the facing: a nose is not something geometry
 # declares. That one is settled by looking at the model, which is what the
@@ -16,13 +16,11 @@ extends GdUnitTestSuite
 const ALIEN_SHIP_SCENE := preload("res://scenes/AlienShip.tscn")
 const ORE_CARRIER_SCENE := preload("res://scenes/OreCarrier.tscn")
 
-# The shape in AlienShip.tscn, which every hull has to fit inside. Repeated
-# rather than read back out of the scene, so that changing the box without
-# re-measuring the ships fails here instead of silently widening the test.
-const COLLISION_BOX := Vector3(1.93, 1.15, 1.87)
-# The box was rounded off the saucer's measured bounds, so the saucer fills it
-# to within a rounding error rather than sitting comfortably inside it.
 const FIT_TOLERANCE: float = 0.02
+# The biggest hull the game should ever field. A hull past this was almost
+# certainly exported at the wrong scale (the generators hand back 1.0-unit
+# models), and an oversized hit box makes a ship impossible to miss.
+const LARGEST_HULL := Vector3(4.0, 3.0, 4.0)
 
 
 func _first_mesh(node: Node) -> MeshInstance3D:
@@ -77,20 +75,32 @@ func test_the_fleet_is_more_than_one_ship() -> void:
 		assert_object(hull).is_not_null()
 
 
-func test_every_hull_fits_the_collision_shape_they_all_share() -> void:
+func test_every_hull_is_centred_on_its_own_bounds() -> void:
 	for hull in AlienShip.HULLS:
 		var root: Node3D = auto_free(hull.instantiate())
 		add_child(root)
-		var mesh := _first_mesh(root)
-		assert_object(mesh).is_not_null()
-
-		var aabb := _true_bounds(mesh)
+		var aabb := _true_bounds(_first_mesh(root))
 		for axis in 3:
-			# Centred: the ship wobbles and banks about its own origin, so a hull
-			# modelled off to one side would orbit a point out in empty space.
+			# The ship wobbles and banks about its own origin, so a hull modelled
+			# off to one side would orbit a point out in empty space.
 			assert_float(absf(aabb.get_center()[axis])).is_less(FIT_TOLERANCE)
-			# And inside the one box, so no hull has corners the lasers miss.
-			assert_float(aabb.size[axis]).is_less(COLLISION_BOX[axis] + FIT_TOLERANCE)
+			assert_float(aabb.size[axis]).is_less(LARGEST_HULL[axis])
+
+
+func test_a_ships_hit_box_is_the_size_of_the_hull_it_wears() -> void:
+	# Spawn enough ships to see every hull, and check each one's box against the
+	# geometry it is actually wearing — a box left at the scene's placeholder
+	# size would be wrong for all of them.
+	var seen := {}
+	for i in 60:
+		var ship := _spawn(ALIEN_SHIP_SCENE)
+		var mesh := _first_mesh(ship.get_node("Model"))
+		var box: BoxShape3D = ship.get_node("CollisionShape3D").shape
+		var aabb := _true_bounds(mesh)
+		seen[mesh.mesh] = true
+		for axis in 3:
+			assert_float(box.size[axis]).is_equal_approx(aabb.size[axis], FIT_TOLERANCE)
+	assert_int(seen.size()).is_equal(AlienShip.HULLS.size())
 
 
 func test_a_spawning_ship_puts_a_hull_on() -> void:
@@ -102,12 +112,22 @@ func test_a_spawning_ship_puts_a_hull_on() -> void:
 	assert_object(mesh.mesh).is_not_null()
 
 
-func test_the_ore_carrier_wears_one_too() -> void:
+func test_the_ore_carrier_wears_its_own_hull_every_time() -> void:
 	# The carrier inherits AlienShip.tscn, and that inheritance is the reason it
-	# keeps every fix the scout gets. It is also what a hand-authored model node
-	# on the carrier would quietly break.
-	var mesh := _first_mesh(_spawn(ORE_CARRIER_SCENE).get_node("Model"))
-	assert_object(mesh).is_not_null()
+	# keeps every fix the scout gets. It does not draw from the fleet: it is its
+	# own ship, and a carrier that came up as a scaled-up gunship would be a
+	# 5-metre one.
+	var first: Mesh = null
+	for i in 10:
+		var mesh := _first_mesh(_spawn(ORE_CARRIER_SCENE).get_node("Model"))
+		assert_object(mesh).is_not_null()
+		if first == null:
+			first = mesh.mesh
+		assert_object(mesh.mesh).is_same(first)
+	for hull in AlienShip.HULLS:
+		var root: Node3D = auto_free(hull.instantiate())
+		add_child(root)
+		assert_object(_first_mesh(root).mesh).is_not_same(first)
 
 
 func test_the_draw_reaches_every_hull_in_the_pool() -> void:

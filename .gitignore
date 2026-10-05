@@ -26,3 +26,8 @@ export-web.bat
 # Godot also skips this dir via planning/.gdignore, and the Web export
 # preset excludes it, so it never reaches docs/index.pck.
 planning/
+
+# Raw 3D-generator downloads for the scene rebuild (blender/scene_rebuild_prompts.md).
+# 50-100 MB each before decimation; only the processed exports under assets/ ship.
+# temp/.gdignore keeps Godot from importing them as well.
+/temp/

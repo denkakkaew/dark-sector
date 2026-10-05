@@ -2,12 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/AlienShip.gd" id="1"]
 
-; One shape for every hull in AlienShip.HULLS, sized to the widest of them —
-; the saucer, as measured and printed by blender/export_alien.py. The other two
-; are exported inside it (1.86 x 0.68 x 1.86 and 1.86 x 1.00 x 1.86), so this
-; box is a little generous on them, which only makes a near miss count as a
-; hit; that is the friendly side to err on for this audience. Re-run the export
-; scripts after editing a model and widen this if one grows past it.
+; A placeholder: AlienShip._fit_collision_to() replaces this shape with one
+; measured off whichever hull the ship wears, because the hulls are not the same
+; size. It is still here so the node has a valid shape in the editor.
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1.93, 1.15, 1.87)
 
