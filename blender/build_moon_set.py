@@ -163,7 +163,7 @@ def _height(x, z, craters, noises):
     return h * _smooth(flat)
 
 
-def _regolith_texture(n=1024, seed=3):
+def _regolith_texture(n=1024, seed=3, base=0.285, tint=(0.99, 0.99, 1.02), contrast=1.0):
     """A seamless grey regolith: layered noise, pits and pebbles. Periodic by
     construction (FFT filtered), so it tiles."""
     rng = np.random.default_rng(seed)
@@ -181,7 +181,7 @@ def _regolith_texture(n=1024, seed=3):
     coarse = band(2.4)
     mid = band(1.6)
     fine = band(0.6)
-    v = 0.285 + 0.05 * coarse + 0.032 * mid + 0.028 * fine
+    v = base + contrast * (0.05 * coarse + 0.032 * mid + 0.028 * fine)
 
     # Pits and bright pebbles: sparse blobs.
     for _ in range(2600):
@@ -194,7 +194,7 @@ def _regolith_texture(n=1024, seed=3):
         xs = (np.arange(x - r, x + r + 1)) % n
         v[np.ix_(ys, xs)] += sign * 0.06 * mask
     v = np.clip(v, 0.12, 0.8)
-    img = np.stack([v * 0.99, v * 0.99, v * 1.02, np.ones_like(v)], axis=-1)
+    img = np.stack([v * tint[0], v * tint[1], v * tint[2], np.ones_like(v)], axis=-1)
     return img
 
 
@@ -228,6 +228,55 @@ def _ground_material(image):
     return mat
 
 
+def terrain_from_heights(X, Z, H, shade, image, name="MoonTerrain", tile=TILE_METRES, budget=TRI_BUDGET):
+    """Turn a height field into one mesh: world-planar UVs tiled every `tile`
+    metres, `shade` as a vertex colour (rows x cols, grey, or rows x cols x 3), the
+    texture multiplied by it, flat stretches decimated away.
+
+    Shared with the other scenes' ground (`build_mars_set.py`)."""
+    rows, cols = H.shape
+    verts = [g2b(X[r, c], H[r, c], Z[r, c]) for r in range(rows) for c in range(cols)]
+    faces = []
+    for r in range(rows - 1):
+        for c in range(cols - 1):
+            i = r * cols + c
+            # Counter-clockwise seen from above (Blender +Z).
+            faces.append((i, i + cols, i + cols + 1, i + 1))
+
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+
+    uv = mesh.uv_layers.new(name="UVMap")
+    for poly in mesh.polygons:
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            v = mesh.vertices[vi].co
+            uv.data[li].uv = (v.x / tile, v.y / tile)
+
+    attr = mesh.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
+    flat = np.asarray(shade).reshape(rows * cols, -1)
+    for i in range(len(mesh.vertices)):
+        c = flat[i]
+        rgb = (float(c[0]), float(c[0]), float(c[0])) if len(c) == 1 else (float(c[0]), float(c[1]), float(c[2]))
+        attr.data[i].color = (rgb[0], rgb[1], rgb[2], 1.0)
+
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.data.materials.append(_ground_material(image))
+
+    # Decimate the flat stretches away, keep the relief.
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    total = len(mesh.polygons)
+    dec = obj.modifiers.new("Decimate", "DECIMATE")
+    dec.decimate_type = "COLLAPSE"
+    dec.ratio = min(1.0, budget / (total * 2.0))  # quads are two tris each
+    bpy.ops.object.modifier_apply(modifier="Decimate")
+    return obj
+
+
 def build_terrain():
     rng = np.random.default_rng(11)
     noises = [ValueNoise(s) for s in (1, 2, 3, 4, 5)]
@@ -251,45 +300,7 @@ def build_terrain():
     shade = shade + 0.08 * np.clip(H / 40.0, 0, 1)
     shade = np.clip(shade, 0.45, 1.15)
 
-    verts = [g2b(X[r, c], H[r, c], Z[r, c]) for r in range(ROWS) for c in range(COLS)]
-    faces = []
-    for r in range(ROWS - 1):
-        for c in range(COLS - 1):
-            i = r * COLS + c
-            # Counter-clockwise seen from above (Blender +Z).
-            faces.append((i, i + COLS, i + COLS + 1, i + 1))
-
-    mesh = bpy.data.meshes.new("MoonTerrain")
-    mesh.from_pydata(verts, [], faces)
-    mesh.update()
-    for poly in mesh.polygons:
-        poly.use_smooth = True
-
-    # UV: world-planar, one repeat per TILE_METRES.
-    uv = mesh.uv_layers.new(name="UVMap")
-    for poly in mesh.polygons:
-        for li, vi in zip(poly.loop_indices, poly.vertices):
-            v = mesh.vertices[vi].co
-            uv.data[li].uv = (v.x / TILE_METRES, v.y / TILE_METRES)
-
-    attr = mesh.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
-    flat_shade = shade.ravel()
-    for i in range(len(mesh.vertices)):
-        s = float(flat_shade[i])
-        attr.data[i].color = (s, s, s, 1.0)
-
-    obj = bpy.data.objects.new("MoonTerrain", mesh)
-    bpy.context.scene.collection.objects.link(obj)
-    obj.data.materials.append(_ground_material(_make_image("regolith", _regolith_texture())))
-
-    # Decimate the flat stretches away, keep the craters.
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    total = len(mesh.polygons)
-    dec = obj.modifiers.new("Decimate", "DECIMATE")
-    dec.decimate_type = "COLLAPSE"
-    dec.ratio = min(1.0, TRI_BUDGET / (total * 2.0))  # quads are two tris each
-    bpy.ops.object.modifier_apply(modifier="Decimate")
+    obj = terrain_from_heights(X, Z, H, shade, _make_image("regolith", _regolith_texture()))
     return obj, (noises, craters)
 
 

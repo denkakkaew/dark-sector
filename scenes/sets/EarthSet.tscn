@@ -1,0 +1,54 @@
+[gd_scene load_steps=10 format=3]
+
+; Written by blender/make_earth_set_scene.py from blender/earth_layout.py - move
+; things in the layout, or by hand here (a re-run rewrites this file).
+; A night city seen from above: the street grid, ~2,500 lit buildings, a river,
+; elevated light-trail roads, a golden cable-stayed bridge and a few landmark
+; towers. Hung SET_Y below the deck, so the camera looks down on it.
+
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_ground.glb" id="1"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_city.glb" id="2"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_river.glb" id="3"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_roads.glb" id="4"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_bridge.glb" id="5"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_tower_artdeco.glb" id="6"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_tower_neon.glb" id="7"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_tower_pixel.glb" id="8"]
+[ext_resource type="PackedScene" path="res://assets/object/earth/earth_building_midrise_a.glb" id="9"]
+
+[node name="EarthSet" type="Node3D"]
+
+[node name="City" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, -120, 0)
+
+[node name="Ground" parent="City" instance=ExtResource("1")]
+
+[node name="Buildings" parent="City" instance=ExtResource("2")]
+
+[node name="River" parent="City" instance=ExtResource("3")]
+
+[node name="Roads" parent="City" instance=ExtResource("4")]
+
+[node name="Bridge" parent="City" instance=ExtResource("5")]
+transform = Transform3D(-0.6106, 0, 0.7919, 0, 1, 0, -0.7919, 0, -0.6106, 85, 0, -230)
+
+[node name="ArtDeco" parent="City" instance=ExtResource("6")]
+transform = Transform3D(0.9397, 0, -0.342, 0, 1, 0, 0.342, 0, 0.9397, -250, 0, -470)
+
+[node name="Neon" parent="City" instance=ExtResource("7")]
+transform = Transform3D(0.9848, 0, 0.1736, 0, 1, 0, -0.1736, 0, 0.9848, 150, 0, -520)
+
+[node name="Pixel" parent="City" instance=ExtResource("8")]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 470, 0, -400)
+
+[node name="MidriseA1" parent="City" instance=ExtResource("9")]
+transform = Transform3D(0.9962, 0, -0.0872, 0, 1, 0, 0.0872, 0, 0.9962, -120, 0, -250)
+
+[node name="MidriseA3" parent="City" instance=ExtResource("9")]
+transform = Transform3D(1.2233, 0, 0.1719, 0, 1.2353, 0, -0.1719, 0, 1.2233, 20, 0, -300)
+
+[node name="MidriseA2" parent="City" instance=ExtResource("9")]
+transform = Transform3D(0.9206, 0, -0.1957, 0, 0.9412, 0, 0.1957, 0, 0.9206, 260, 0, -300)
+
+[node name="MidriseA4" parent="City" instance=ExtResource("9")]
+transform = Transform3D(1.0502, 0, 0.3823, 0, 1.1176, 0, -0.3823, 0, 1.0502, -330, 0, -330)

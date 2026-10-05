@@ -249,6 +249,65 @@ SPECS.update({
 })
 
 
+# Mars' colony and alien rig (blender/mars_layout.py places them). Each is exported
+# once, at the size of its largest instance, standing on its bottom centre; the
+# layout scales the smaller ones down. The tower and the second pod are the later
+# generations of those two models.
+def _mars_prop(name, size, budget, texture=512):
+    return {
+        "src": name + ".glb",
+        "out": os.path.join("assets", "object", "mars", name + ".glb"),
+        "size": size,
+        "origin": _bottom_centre,
+        "yaw": 0.0,
+        "budget": budget,
+        "texture": texture,
+    }
+
+
+SPECS.update({
+    "mars_colony_dome": _mars_prop("mars_colony_dome", 22.0, 8000, 1024),
+    "mars_colony_tower2": _mars_prop("mars_colony_tower2", 26.0, 9000, 1024),
+    "mars_hab_pod": _mars_prop("mars_hab_pod", 8.5, 6000),
+    "mars_hab_pod2": _mars_prop("mars_hab_pod2", 7.5, 6000),
+    "mars_radar_dish": _mars_prop("mars_radar_dish", 11.0, 6000),
+    "mars_cargo_crawler": _mars_prop("mars_cargo_crawler", 13.0, 7000),
+    "mars_rover": _mars_prop("mars_rover", 5.5, 7000),
+    "mars_drill_rig": _mars_prop("mars_drill_rig", 32.0, 16000, 1024),
+    "mars_mining_crane": _mars_prop("mars_mining_crane", 22.0, 9000),
+    "mars_ore_pile": _mars_prop("mars_ore_pile", 6.5, 4500),
+    "mars_alien_drone": _mars_prop("mars_alien_drone", 3.6, 4500),
+})
+
+
+# Earth's landmark towers and mid-rise buildings (blender/earth_layout.py places
+# them). Each was generated at night with its windows lit, so its own texture is
+# also its emission: the walls are dark and the windows bright, which is what makes
+# lit windows glow instead of being merely bright paint. (A second mid-rise, `earth_building_midrise_b`, was generated too, but it is 1.96M faces of separate
+# window islands that no decimation here could bring under ~150k, so the layout uses the first one twice.) Standing on their bottom
+# centre; exported at the size of their largest instance.
+def _earth_prop(name, size, budget, texture=1024, emissive=1.1):
+    spec = {
+        "src": name + ".glb",
+        "out": os.path.join("assets", "object", "earth", name + ".glb"),
+        "size": size,
+        "origin": _bottom_centre,
+        "yaw": 0.0,
+        "budget": budget,
+        "texture": texture,
+        "emissive": emissive,
+    }
+    return spec
+
+
+SPECS.update({
+    "earth_tower_artdeco": _earth_prop("earth_tower_artdeco", 205.0, 9000),
+    "earth_tower_neon": _earth_prop("earth_tower_neon", 225.0, 7000),
+    "earth_tower_pixel": _earth_prop("earth_tower_pixel", 275.0, 9000),
+    "earth_building_midrise_a": _earth_prop("earth_building_midrise_a", 85.0, 4500),
+})
+
+
 # The ISS scene's one station part, a module drifting past (blender/iss_layout.py
 # places it). Floating in space, so it is centred on its own bounds, at the size
 # `iss_layout.EXPORTED` says. The generator drew it with its long side along X,
@@ -429,6 +488,61 @@ def _make_ring(ring, trash):
     bpy.context.view_layer.update()
 
 
+def _dissolve_then_collapse(trash, spec, ea):
+    """Merge coplanar faces first, then collapse to the budget.
+
+    A model built of thousands of separate flat features — window frames, ledges —
+    leaves a collapse decimation with nothing to merge: every little island keeps
+    its faces, and the result stays far over budget. Dissolving faces that lie in
+    one plane (within `dissolve` degrees) removes them without touching the
+    silhouette, and the collapse then has real work to do.
+    """
+    import bmesh
+
+    for obj in trash["objects"]:
+        bpy.context.view_layer.objects.active = obj
+        for mod in list(obj.modifiers):
+            obj.modifiers.remove(mod)
+        # Weld first. Some generator meshes arrive with every face carrying its own
+        # copy of its corners, so no edge is shared and the collapse has nothing it
+        # is allowed to merge. UVs are stored per face corner, so welding keeps them.
+        before = len(obj.data.vertices)
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+        bm.to_mesh(obj.data)
+        bm.free()
+        print("welded", before, "->", len(obj.data.vertices), "vertices")
+        dis = obj.modifiers.new("Dissolve", "DECIMATE")
+        dis.decimate_type = "DISSOLVE"
+        dis.angle_limit = math.radians(spec["dissolve"])
+        bpy.ops.object.modifier_apply(modifier=dis.name)
+    total = sum(len(o.data.polygons) for o in trash["objects"])
+    ratio = min(1.0, spec["budget"] / float(total))
+    print("dissolved to", total, "faces; collapsing by", round(ratio, 4))
+    for obj in trash["objects"]:
+        polys = len(obj.data.polygons)
+        if polys:
+            floor = min(1.0, ea.MIN_POLYS_PER_PART / float(polys))
+            dec = obj.modifiers.new("Decimate", "DECIMATE")
+            dec.decimate_type = "COLLAPSE"
+            dec.ratio = max(ratio, floor)
+
+
+def _make_emissive(materials, strength):
+    """Drive each material's emission from its own base-colour texture."""
+    for mat in materials:
+        if not mat.use_nodes:
+            continue
+        nt = mat.node_tree
+        bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE" and n.image is not None), None)
+        if bsdf is None or tex is None:
+            continue
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+        bsdf.inputs["Emission Strength"].default_value = strength
+
+
 def _add_pad(pad, trash):
     """A plain dark cylinder under the origin, in final (game-unit) coordinates."""
     bpy.ops.mesh.primitive_cylinder_add(
@@ -455,6 +569,9 @@ def export_prop(name, out_root=None):
         spec["recolour"] = None
     ea = _load_export_alien()
     ea.MAX_TEXTURE_SIZE = spec["texture"]
+    # The alien pipeline never decimates a part below 150 faces, so a model built
+    # of many tiny parts can't reach its budget; `min_polys` lowers that floor.
+    ea.MIN_POLYS_PER_PART = spec.get("min_polys", 150)
 
     root = _project_root()
     src = os.path.join(root, "temp", spec["src"])
@@ -491,8 +608,12 @@ def export_prop(name, out_root=None):
 
     try:
         src_tris, ratio = ea._build_copies(matrix, trash, spec["budget"])
+        if spec.get("dissolve"):
+            _dissolve_then_collapse(trash, spec, ea)
         if spec.get("recolour"):
             _recolour(trash["images"], *spec["recolour"])
+        if spec.get("emissive"):
+            _make_emissive(trash["materials"], spec["emissive"])
         if spec.get("ring"):
             _make_ring(spec["ring"], trash)
         if spec.get("pad"):

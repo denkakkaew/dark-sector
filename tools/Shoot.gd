@@ -25,6 +25,19 @@ func _ready() -> void:
 	var game: Node3D = load("res://scenes/Game.tscn").instantiate()
 	add_child(game)
 	await get_tree().process_frame
+	if args.size() > 2 and args[2] == "still":
+		# An attract still: the scene as the player sees it, minus the HUD and the
+		# reticle, with no ships on the field. assets/backdrop/destination_N.png.
+		game.get_node("UI").visible = false
+		game.set("_to_spawn", 0)
+	if args.size() > 3 and args[3] == "rig":
+		# Close to the drilling rig, clock sped up, to watch what works there.
+		var rig_cam: Camera3D = game.get_node("Camera3D")
+		rig_cam.global_position = Vector3(42.0, 4.5, -38.0)
+		rig_cam.look_at(Vector3(42.0, 2.5, -62.0), Vector3.UP)
+		rig_cam.fov = 40.0
+		Engine.time_scale = 4.0
+		game.set("_to_spawn", 0)
 
 	if lineup:
 		# No wave: the field is ours.

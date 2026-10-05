@@ -266,20 +266,24 @@ const SCENES: Array = [
 		# would only cut the outpost in half.
 		"look": {
 			# The sky is the only one in the campaign that isn't black. Barely any
-			# of it survives behind the photo, but it has to agree with the image's
-			# own haze at the edges rather than framing it in a darker band.
+			# of it survives behind the set, but it has to agree with the haze at
+			# the horizon rather than framing it in a darker band.
 			"space": Color(0.4, 0.21, 0.16),
 			"ambient": Color(0.34, 0.2, 0.16),
 			"sun": {"color": Color(1, 0.85, 0.68), "energy": 0.7},
 			"fill": {"color": Color(1, 0.66, 0.5), "energy": 0.4},
+			# The orange sky is the one painted thing left; the colony, the rig,
+			# the mesas and the ground are a real 3D set, hung in front of it.
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/mars_surface.png",
-				# Knocked further back than Earth's, and towards grey: the image is
-				# a saturated orange edge to edge, and the aliens have to stay the
-				# most colourful thing on the screen.
-				"tint": Color(0.55, 0.51, 0.52),
+				"texture": "res://assets/backdrop/sky_mars.png",
+				"tint": Color(1, 1, 1),
+				"distance": 330.0,
 			},
+			"set": "res://scenes/sets/MarsSet.tscn",
+			# Dust: distance blurs toward the sky's own horizon colour, so the far
+			# mesas fade the way the painting's do.
+			"fog": {"color": Color(0.86, 0.5, 0.33), "density": 0.0045},
 			"bodies": [],
 			"stars": 0.0,
 		},
@@ -339,17 +343,22 @@ const SCENES: Array = [
 			"ambient": Color(0.2, 0.07, 0.09),
 			"sun": {"color": Color(1, 0.94, 0.92), "energy": 0.3},
 			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.5},
+			# The painted night sky is all that is left of the photograph. The city
+			# below it — street grid, ~2,500 lit buildings, river, light-trail roads,
+			# a golden bridge and the landmark towers — is a real 3D set, hung 120 m
+			# below the deck so the camera looks *down* on it as the painting does.
+			# The sky is pushed out to 3 km because the city runs to 1.5 km, and
+			# anything behind the sky quad is hidden.
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/earth_city.png",
-				# The lightest knock-back in the campaign, and barely shifted: a
-				# night city is already dark and mostly black, so the usual push
-				# would put the lights out. The small warm bias is the alert light
-				# reaching the skyline.
-				"tint": Color(0.86, 0.74, 0.76),
+				"texture": "res://assets/backdrop/sky_earth_night.png",
+				"tint": Color(0.95, 0.88, 0.9),
+				"distance": 3000.0,
 			},
+			"set": "res://scenes/sets/EarthSet.tscn",
+			# Night haze: the far city fades into a blue glow at the horizon.
+			"fog": {"color": Color(0.13, 0.15, 0.33), "density": 0.0012},
 			"bodies": [],
-			# None: the photograph covers the whole frustum and brings its own.
 			"stars": 0.0,
 		},
 		"wave": {

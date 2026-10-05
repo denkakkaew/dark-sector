@@ -89,6 +89,14 @@ func _apply_environment(look: Dictionary) -> void:
 	var environment: Environment = world_environment.environment.duplicate()
 	environment.background_color = look["space"]
 	environment.ambient_light_color = look["ambient"]
+	# Haze is optional. Mars' dust blurs distance into orange; the other scenes are
+	# vacuum, and the authored environment has none, so a scene without it simply
+	# keeps that.
+	var fog: Dictionary = look.get("fog", {})
+	environment.fog_enabled = not fog.is_empty()
+	if environment.fog_enabled:
+		environment.fog_light_color = fog["color"]
+		environment.fog_density = fog["density"]
 	world_environment.environment = environment
 
 
@@ -124,6 +132,9 @@ func _apply_photo(look: Dictionary) -> void:
 	material = material.duplicate()
 	material.albedo_color = settings["tint"]
 	material.albedo_texture = texture
+	# The sky is the one thing that must not be hazed: it hangs hundreds of metres
+	# out, where any fog would wash the picture to a flat colour.
+	material.disable_fog = true
 	photo.set_surface_override_material(0, material)
 
 	var quad := photo.mesh.duplicate() as QuadMesh

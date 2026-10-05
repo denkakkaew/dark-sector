@@ -108,3 +108,20 @@ func test_a_far_sky_is_pushed_back_along_its_own_ray_and_scaled_to_match() -> vo
 		# The quad is authored 48.088 m out, straight ahead of the camera's -Z.
 		assert_float(backdrop.position.z).is_equal_approx(-SceneLookScript.PHOTO_AUTHORED_DISTANCE * far, 0.01)
 		assert_float((backdrop.mesh as QuadMesh).size.x).is_equal_approx(SceneLookScript.PHOTO_WIDTH * far, 0.01)
+
+
+func test_only_a_scene_with_haze_has_fog_and_the_sky_is_never_hazed() -> void:
+	# Mars' dust is fog; the other scenes are vacuum and must not inherit it from
+	# the scene before. The painted sky hangs hundreds of metres out, where any fog
+	# would wash it to one flat colour, so it opts out regardless.
+	var game := _open_game()
+	var backdrop: MeshInstance3D = game.get_node("Backdrop")
+	for index in range(1, CampaignData.count() + 1):
+		game.get_node("SceneLook").apply(index)
+		var expected: Dictionary = CampaignData.look(index)
+		var environment: Environment = game.get_node("WorldEnvironment").environment
+		assert_bool(environment.fog_enabled).is_equal(expected.has("fog"))
+		if expected.has("fog"):
+			assert_float(environment.fog_density).is_equal_approx(expected["fog"]["density"], 0.0001)
+		if expected["photo"]["visible"]:
+			assert_bool((backdrop.get_surface_override_material(0) as StandardMaterial3D).disable_fog).is_true()
