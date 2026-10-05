@@ -121,11 +121,17 @@ const SCENES: Array = [
 			"ambient": Color(0.12, 0.12, 0.18),
 			"sun": {"color": Color(1, 1, 1), "energy": 0.35},
 			"fill": {"color": Color(0.88, 0.92, 1), "energy": 0.55},
+			# The painted Earth limb stays: it is the scene's best feature and a 3D
+			# globe could not match its sharpness across half the screen. It is
+			# pushed far back so the 3D station — trusses, a module, a Soyuz, the
+			# robot arm and solar arrays at the screen edges — can stand in front.
 			"photo": {
 				"visible": true,
 				"texture": "res://assets/backdrop/space_earth.png",
 				"tint": Color(0.7, 0.7, 0.7),
+				"distance": 220.0,
 			},
+			"set": "res://scenes/sets/ISSSet.tscn",
 			"bodies": [],
 			"stars": 0.0,
 		},
@@ -175,12 +181,11 @@ const SCENES: Array = [
 				"correct": 0,
 			},
 		],
-		# No air to soften anything: a hard white sun and a black sky. The other
-		# surface scene's rule applies here too — the backdrop paints its own
-		# regolith, horizon, star field and the storyboard's small blue Earth, so
-		# the procedural sphere, the second marble and the generated stars are all
-		# gone. Each would have doubled something the image already has, and the
-		# ground sphere would have cut the alien base in half.
+		# No air to soften anything: a hard white sun and a black sky. The ground,
+		# the horizon ridge, the alien base and the landing pads are a real 3D set
+		# now (`set`); what stays painted is only the star field behind it, hung
+		# far back (`distance`) so the set can stand in front of it. Earth is the
+		# one procedural body: the storyboard's small blue marble over the ridge.
 		"look": {
 			"space": Color(0.01, 0.01, 0.02),
 			"ambient": Color(0.1, 0.1, 0.13),
@@ -188,13 +193,20 @@ const SCENES: Array = [
 			"fill": {"color": Color(0.6, 0.65, 0.78), "energy": 0.18},
 			"photo": {
 				"visible": true,
-				"texture": "res://assets/backdrop/moon_surface.png",
-				# Straight grey, no colour shift: unlike Mars there is no cast to
-				# correct, only a bright lit foreground to knock back so the
-				# turret stays in front of the regolith instead of in it.
-				"tint": Color(0.62, 0.62, 0.64),
+				"texture": "res://assets/backdrop/sky_stars.png",
+				"tint": Color(0.92, 0.92, 0.96),
+				"distance": 330.0,
 			},
-			"bodies": [],
+			"set": "res://scenes/sets/MoonSet.tscn",
+			"bodies": [
+				{
+					"position": Vector3(-95.0, 62.0, -250.0),
+					"radius": 9.0,
+					"color": Color(0.22, 0.45, 0.9),
+					"mottle": 0.45,
+					"emission": 0.55,
+				},
+			],
 			"stars": 0.0,
 		},
 		"wave": {

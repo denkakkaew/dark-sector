@@ -57,6 +57,18 @@ func _ready() -> void:
 		var camera: Camera3D = game.get_node("Camera3D")
 		camera.global_position = Vector3(0.0, 16.0, 7.5)
 		camera.global_rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	if args.size() > 2 and args[2] == "fast":
+		# The real battle at 30x, two frames apart, to see anything that drifts.
+		Engine.time_scale = 30.0
+		for i in 70:
+			await get_tree().process_frame
+		get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_a.png")))
+		for i in 30:
+			await get_tree().process_frame
+		get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_b.png")))
+		Engine.time_scale = 1.0
+		get_tree().quit()
+		return
 	if args.size() > 2 and args[2] == "play":
 		# The real wave, untouched: a numbered frame every half second.
 		for n in 6:
@@ -65,6 +77,12 @@ func _ready() -> void:
 			get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_%d.png" % n)))
 		get_tree().quit()
 		return
+	if args.size() > 3 and args[3] == "module":
+		# The ISS module part-way across, rather than waiting for it to drift in.
+		var module := game.get_node_or_null("SceneLook/Set/ISSSet/Module")
+		if module != null:
+			module.position.x = -18.0
+			module.velocity = Vector3.ZERO
 	if args.size() > 3 and args[3] == "side":
 		# Level with the ships and close, so a hull flown across the view is seen
 		# in profile, large enough to tell nose from tail.

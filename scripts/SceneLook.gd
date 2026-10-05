@@ -10,6 +10,13 @@ extends Node3D
 ## sphere and a quad of dots. Building them from the table keeps a fifth
 ## destination a table entry instead of a fifth set of scene nodes.
 ##
+## A scene may also name a **set**: a 3D scene of ground, buildings and props
+## (`look["set"]`, a path to a .tscn) that is hung under `Set` and dropped again
+## on the next scene. That is what replaces a painted backdrop with real
+## geometry — the painting stays only as the *sky*, and `photo.distance` pushes
+## it far back so the set can stand in front of it. Both keys are optional, so a
+## scene that still wants its painting is a table entry with neither.
+##
 ## GL-Compatibility rules everything here: no sky shader, no reflection probe, no
 ## GPU particles. A planet is a sphere with a noise texture on it, lit by the
 ## same directional light as the turret.
@@ -28,6 +35,11 @@ const MOTTLE_TEXTURE_SIZE: int = 256
 ## fixed and the height that follows the image — a backdrop narrower than this
 ## would show the sky down its sides.
 const PHOTO_WIDTH: float = 164.97
+## How far behind the camera's origin the painted backdrop is authored to hang,
+## and the distance `photo.distance` is a multiple of. The quad is pushed back
+## along the same ray, so a sky at 5x the distance is 5x the size and looks
+## exactly the same from the camera.
+const PHOTO_AUTHORED_DISTANCE: float = 48.088
 
 @export var world_environment: WorldEnvironment
 @export var sun: DirectionalLight3D
@@ -40,6 +52,21 @@ const PHOTO_WIDTH: float = 164.97
 @onready var _bodies: Node3D = $Bodies
 @onready var _stars: MeshInstance3D = $Stars
 
+## Where the scene's set is hung. Made here rather than authored, so the one
+## scene file does not need to know sets exist.
+var _set_root: Node3D
+## The backdrop quad's authored placement, kept so a scene without a far sky
+## puts it back where it was.
+var _photo_home: Transform3D
+
+
+func _ready() -> void:
+	_set_root = Node3D.new()
+	_set_root.name = "Set"
+	add_child(_set_root)
+	if photo != null:
+		_photo_home = photo.transform
+
 
 ## Dress the field for a 1-based scene index. Called by the spawner as the
 ## gameplay scene comes up, before the first alien is anywhere near.
@@ -50,6 +77,7 @@ func apply(scene_index: int) -> void:
 	_apply_photo(look)
 	_apply_stars(look)
 	_apply_bodies(look)
+	_apply_set(look)
 
 
 func _apply_environment(look: Dictionary) -> void:
@@ -104,8 +132,31 @@ func _apply_photo(look: Dictionary) -> void:
 	# Fixed width, height from the image's own aspect. Cropping the top and bottom
 	# off a backdrop is invisible; stretching one destination's sky to another's
 	# proportions is not.
-	quad.size = Vector2(PHOTO_WIDTH, PHOTO_WIDTH * texture.get_height() / texture.get_width())
+	var far := _photo_scale(settings)
+	quad.size = Vector2(PHOTO_WIDTH, PHOTO_WIDTH * texture.get_height() / texture.get_width()) * far
 	photo.mesh = quad
+	# Pushed out along its own ray from the camera, so it is bigger and further
+	# and looks identical — which is what lets a set stand in front of it.
+	photo.transform = Transform3D(_photo_home.basis, _photo_home.origin * far)
+
+
+func _photo_scale(settings: Dictionary) -> float:
+	return float(settings.get("distance", PHOTO_AUTHORED_DISTANCE)) / PHOTO_AUTHORED_DISTANCE
+
+
+func _apply_set(look: Dictionary) -> void:
+	for existing in _set_root.get_children():
+		existing.queue_free()
+	var path: String = look.get("set", "")
+	if path.is_empty():
+		return
+	var scene := load(path) as PackedScene
+	if scene == null:
+		# Same rule as a missing backdrop or sound: scenery is not a reason to
+		# stop a kiosk, so say so in the log and let the scene play without it.
+		push_warning("SceneLook: no set at %s" % path)
+		return
+	_set_root.add_child(scene.instantiate())
 
 
 func _apply_stars(look: Dictionary) -> void:

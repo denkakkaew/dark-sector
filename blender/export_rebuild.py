@@ -225,6 +225,51 @@ SPECS = {
 }
 
 
+# The Moon's alien base (blender/moon_layout.py places them). Each is exported
+# once, at the size of its largest instance, standing on its own bottom centre —
+# the layout scales the smaller instances down. Metres.
+def _moon_prop(name, size, budget, texture=512):
+    return {
+        "src": name + ".glb",
+        "out": os.path.join("assets", "object", "moon", name + ".glb"),
+        "size": size,
+        "origin": _bottom_centre,
+        "yaw": 0.0,
+        "budget": budget,
+        "texture": texture,
+    }
+
+
+SPECS.update({
+    "moon_alien_dome_geodesic": _moon_prop("moon_alien_dome_geodesic", 20.0, 9000, 1024),
+    "moon_alien_dome_shell": _moon_prop("moon_alien_dome_shell", 12.0, 7000, 1024),
+    "moon_alien_spire": _moon_prop("moon_alien_spire", 36.0, 6000, 1024),
+    "moon_alien_tanks": _moon_prop("moon_alien_tanks", 10.0, 6000),
+    "moon_alien_lander": _moon_prop("moon_alien_lander", 6.5, 8000),
+})
+
+
+# The ISS scene's one station part, a module drifting past (blender/iss_layout.py
+# places it). Floating in space, so it is centred on its own bounds, at the size
+# `iss_layout.EXPORTED` says. The generator drew it with its long side along X,
+# which is the way it travels.
+def _iss_prop(name, size, budget, texture=1024):
+    return {
+        "src": name + ".glb",
+        "out": os.path.join("assets", "object", "iss", name + ".glb"),
+        "size": size,
+        "origin": _bounds_centre,
+        "yaw": 0.0,
+        "budget": budget,
+        "texture": texture,
+    }
+
+
+SPECS.update({
+    "iss_module": _iss_prop("iss_module", 22.0, 9000),
+})
+
+
 # --- pipeline ---------------------------------------------------------------
 
 def _recolour(images, hue_from, hue_to, delta):
