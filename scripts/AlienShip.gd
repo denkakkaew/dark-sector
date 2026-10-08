@@ -51,6 +51,26 @@ static var _hull_boxes: Dictionary = {}
 # enough that it never looks like it is drifting sideways.
 const TURN_RESPONSE: float = 6.0
 
+## Ground clearance. A ship flies the course its flight mode gives it, and where
+## rock stands in the way (Mars' sandstone ledges and boulders) it climbs over
+## and then sinks back onto that course. It looks ahead along the way it is
+## actually moving, so it is already rising as it reaches the rock rather than
+## popping up on contact.
+##
+## The floor comes from the scene's set (`SceneLook.flight_floor`, handed over by
+## the spawner); null is open space and the ship flies its course untouched.
+var flight_floor: FlightFloor
+## How far above the rock the hull's underside stays.
+const CLEARANCE: float = 0.6
+## Seconds ahead along the ship's own ground track that it checks for rock.
+const LOOK_AHEAD: Array[float] = [0.3, 0.6, 0.9, 1.2]
+## How quickly it climbs toward the height it needs (per second), and how fast
+## it sinks back once past (m/s). Climbing is the urgent one.
+const CLIMB_RESPONSE: float = 5.0
+const SINK_SPEED: float = 2.0
+## Height above its course the ship is flying at right now, to clear the ground.
+var _lift: float = 0.0
+
 var velocity: Vector3 = Vector3.ZERO
 # Smoothed heading the hull points along. Starts unset: the spawner assigns
 # `velocity` after the ship is in the tree, so the first real direction only
@@ -140,6 +160,10 @@ func _physics_process(delta: float) -> void:
 	if _destroyed:
 		return
 	var previous := global_position
+	# Back down onto the course, so the flight mode moves the ship along it as
+	# if no rock were there; the lift goes back on top afterwards.
+	global_position.y -= _lift
+	var on_course := global_position
 	_wobble_time += delta
 	var wobble := Vector3(
 		sin(_wobble_time * 1.7) * _wobble_amp_x,
@@ -161,10 +185,47 @@ func _physics_process(delta: float) -> void:
 			var vertical := Vector3(0.0, sin(_wobble_time * _swoop_freq) * _swoop_amp, 0.0)
 			global_position += (velocity + wobble + vertical) * delta
 			global_position.y = maxf(global_position.y, 0.3)
+	global_position.y += _clear_the_ground(global_position - on_course, delta)
+	# Steered off the step *including* the lift, so a ship climbing over rock
+	# noses up, and dips its nose coming down the far side.
 	_steer(global_position - previous, delta)
 	if global_position.z >= EARTH_Z:
 		got_through.emit()
 		queue_free()
+
+func _clear_the_ground(step: Vector3, delta: float) -> float:
+	"""How far above its course the ship flies this frame; it is on course now.
+
+	Climbs smoothly toward the highest rock found along the next second or so of
+	its ground track (taken from the step it really moved, so a weave's swerve is
+	looked along too), and never less than what the rock directly under it needs:
+	the look-ahead makes the climb smooth, the floor under it makes it certain.
+	"""
+	if flight_floor == null:
+		return 0.0
+	var track := Vector3(step.x, 0.0, step.z) / maxf(delta, 0.0001)
+	var under := _climb_needed(global_position)
+	var wanted := under
+	for seconds in LOOK_AHEAD:
+		wanted = maxf(wanted, _climb_needed(global_position + track * seconds))
+	if wanted > _lift:
+		_lift = lerpf(_lift, wanted, minf(1.0, delta * CLIMB_RESPONSE))
+	else:
+		_lift = move_toward(_lift, wanted, SINK_SPEED * delta)
+	_lift = maxf(_lift, under)
+	return _lift
+
+
+func _climb_needed(at: Vector3) -> float:
+	"""How far the ship would have to rise at `at` to clear the rock there by
+	`CLEARANCE` — over its whole footprint, not just its centre. 0 when clear."""
+	var box := ($CollisionShape3D.shape as BoxShape3D).size * scale
+	var reach := maxf(box.x, box.z) * 0.5
+	var ground := flight_floor.height_at(at.x, at.z)
+	for offset in [Vector2(reach, 0.0), Vector2(-reach, 0.0), Vector2(0.0, reach), Vector2(0.0, -reach)]:
+		ground = maxf(ground, flight_floor.height_at(at.x + offset.x, at.z + offset.y))
+	return maxf(0.0, ground + box.y * 0.5 + CLEARANCE - at.y)
+
 
 func _steer(step: Vector3, delta: float) -> void:
 	"""Point the hull along the way it actually moved this frame.

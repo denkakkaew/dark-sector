@@ -58,6 +58,24 @@ PADS = [
 ]
 LANDER_SIZE = 6.5
 
+# The base's ground crew: the same alien drone that works Mars' rig (one model,
+# one species of worker), here unloading the landers and tending the tanks.
+# (x, z, yaw, size), yaw 0 = facing the player. Each wanders `DRONE_ROAM_RADIUS`
+# from its post (scripts/Worker.gd), so every post keeps that much clear of the
+# buildings, pads and pipes, plus the building's own radius.
+DRONES = [
+    (-5.0, -50.0, 120.0, 3.4),   # by LanderA, facing it
+    (9.5, -47.5, 210.0, 3.6),    # LanderA's other side
+    (-9.0, -60.0, 240.0, 3.3),   # between the two landers, facing LanderB
+    (-23.5, -60.0, 140.0, 3.5),  # LanderB's far side
+    (1.0, -67.0, 100.0, 3.4),    # tending TanksA
+    (19.0, -50.0, 160.0, 3.5),   # out by the shells
+]
+DRONE_ROAM_RADIUS = 2.5
+DRONE_WALK_SPEED = 0.8
+# A bigger, floatier hop than Mars' crew: low gravity, made visible.
+DRONE_BOUNCE = 3.0
+
 # Tubes between the buildings, as (x, z) end pairs.
 PIPES = [
     ((17.0, -66.0), (26.0, -58.0)),

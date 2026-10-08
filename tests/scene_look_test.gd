@@ -125,3 +125,28 @@ func test_only_a_scene_with_haze_has_fog_and_the_sky_is_never_hazed() -> void:
 			assert_float(environment.fog_density).is_equal_approx(expected["fog"]["density"], 0.0001)
 		if expected["photo"]["visible"]:
 			assert_bool((backdrop.get_surface_override_material(0) as StandardMaterial3D).disable_fog).is_true()
+
+
+func test_stars_go_back_with_a_far_sky_and_stay_in_front_of_it() -> void:
+	# A sky pushed back to stand a set in front of it takes the stars with it.
+	# Left at their authored 140 m, Earth's stars would be sprinkled over a city
+	# that runs to 1.5 km; pushed past the sky, they'd be hidden behind it. And
+	# like the sky, they are too far out to survive the haze.
+	var game := _open_game()
+	var stars: MeshInstance3D = game.get_node("SceneLook/Stars")
+	var backdrop: MeshInstance3D = game.get_node("Backdrop")
+	var authored_depth := -stars.position.z
+	var authored_width := (stars.mesh as QuadMesh).size.x
+	for index in range(1, CampaignData.count() + 1):
+		var expected: Dictionary = CampaignData.look(index)
+		if expected["stars"] <= 0.0 or not expected["photo"]["visible"]:
+			continue
+		game.get_node("SceneLook").apply(index)
+		var depth := -stars.position.z
+		assert_float(depth).is_less(-backdrop.position.z)
+		assert_float(depth).is_greater_equal(authored_depth)
+		if expected["photo"].has("distance"):
+			assert_float(depth).is_greater(0.9 * -backdrop.position.z)
+		# Scaled with its distance, so the stars look the same size from the camera.
+		assert_float((stars.mesh as QuadMesh).size.x / depth).is_equal_approx(authored_width / authored_depth, 0.001)
+		assert_bool((stars.get_surface_override_material(0) as StandardMaterial3D).disable_fog).is_true()

@@ -17,7 +17,9 @@ Layout rules (as for the Moon)
 * Everything with height stays **beyond the alien spawn ring** (ships appear up to
   ~36 m out), so a ship never flies through a building: the colony and the rig
   are 50-90 m out. The only nearer things are low sandstone ledges in the screen
-  corners, outside the ship corridor (|x| < 8) and clear of the strafing lane.
+  corners and scattered boulders, outside the ship corridor (|x| < 8). Ships do
+  cross those, so they *climb over* them: MarsSet.tscn tags the ground, ledges
+  and rocks `flight_obstacle`, and scripts/FlightFloor.gd measures them.
 * The ground is flat for 18 m round the turret and gentle across the whole spawn
   zone, so no ship spawns inside a dune.
 """

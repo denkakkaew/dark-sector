@@ -40,6 +40,11 @@ const PHOTO_WIDTH: float = 164.97
 ## along the same ray, so a sky at 5x the distance is 5x the size and looks
 ## exactly the same from the camera.
 const PHOTO_AUTHORED_DISTANCE: float = 48.088
+## Where the star field hangs when a scene's sky is pushed out past it, as a
+## fraction of the sky's distance: far enough in front of the painting that the
+## two never fight over depth, far enough back that a set (Earth's city runs to
+## 1.5 km) stands in front of it rather than being sprinkled with stars.
+const STARS_BEFORE_SKY: float = 0.95
 
 @export var world_environment: WorldEnvironment
 @export var sun: DirectionalLight3D
@@ -55,9 +60,15 @@ const PHOTO_AUTHORED_DISTANCE: float = 48.088
 ## Where the scene's set is hung. Made here rather than authored, so the one
 ## scene file does not need to know sets exist.
 var _set_root: Node3D
+## The height of the current set's rock under the flight zone, for the ships to
+## climb over (see FlightFloor). Null when the scene has none.
+var flight_floor: FlightFloor
 ## The backdrop quad's authored placement, kept so a scene without a far sky
 ## puts it back where it was.
 var _photo_home: Transform3D
+## Same for the star field, and the size of its quad there.
+var _stars_home: Transform3D
+var _stars_size: Vector2
 
 
 func _ready() -> void:
@@ -66,6 +77,8 @@ func _ready() -> void:
 	add_child(_set_root)
 	if photo != null:
 		_photo_home = photo.transform
+	_stars_home = _stars.transform
+	_stars_size = (_stars.mesh as QuadMesh).size
 
 
 ## Dress the field for a 1-based scene index. Called by the spawner as the
@@ -158,6 +171,7 @@ func _photo_scale(settings: Dictionary) -> float:
 func _apply_set(look: Dictionary) -> void:
 	for existing in _set_root.get_children():
 		existing.queue_free()
+	flight_floor = null
 	var path: String = look.get("set", "")
 	if path.is_empty():
 		return
@@ -167,7 +181,10 @@ func _apply_set(look: Dictionary) -> void:
 		# stop a kiosk, so say so in the log and let the scene play without it.
 		push_warning("SceneLook: no set at %s" % path)
 		return
-	_set_root.add_child(scene.instantiate())
+	var instance := scene.instantiate()
+	_set_root.add_child(instance)
+	# Measured in place, once it has its real transform under the set root.
+	flight_floor = FlightFloor.measure(instance)
 
 
 func _apply_stars(look: Dictionary) -> void:
@@ -180,7 +197,26 @@ func _apply_stars(look: Dictionary) -> void:
 		return
 	material = material.duplicate()
 	material.albedo_texture = _star_texture(density)
+	# Stars are as far off as the sky they sit on; haze would hide them.
+	material.disable_fog = true
 	_stars.set_surface_override_material(0, material)
+	_place_stars(look)
+
+
+## The field is authored in front of a sky at its authored distance. A scene that
+## pushes its sky back (to stand a set in front of it) would leave the stars
+## hanging in mid-air over the set, so they go back with the sky — along their
+## own ray and scaled with it, so they look the same size from the camera.
+func _place_stars(look: Dictionary) -> void:
+	var far := 1.0
+	var settings: Dictionary = look["photo"]
+	if settings["visible"] and settings.has("distance"):
+		var sky_depth := -_photo_home.origin.z * _photo_scale(settings)
+		far = maxf(1.0, sky_depth * STARS_BEFORE_SKY / -_stars_home.origin.z)
+	var quad := _stars.mesh.duplicate() as QuadMesh
+	quad.size = _stars_size * far
+	_stars.mesh = quad
+	_stars.transform = Transform3D(_stars_home.basis, _stars_home.origin * far)
 
 
 func _apply_bodies(look: Dictionary) -> void:
