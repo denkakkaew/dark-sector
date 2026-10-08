@@ -179,11 +179,13 @@ def emissive_material(name, image, strength, base=(0.012, 0.016, 0.034, 1.0), ro
     return mat
 
 
-def glow_material(name, colour, strength):
+def glow_material(name, colour, strength, base=None):
+    """Glows `colour`. `base` is the surface under the glow (default: the same
+    colour); a dark base keeps the scene's lights from washing a dim glow out."""
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     b = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-    b.inputs["Base Color"].default_value = colour
+    b.inputs["Base Color"].default_value = base or colour
     b.inputs["Emission Color"].default_value = colour
     b.inputs["Emission Strength"].default_value = strength
     return mat
@@ -227,7 +229,7 @@ def mesh_from(name, quads, uvs, material):
 
 def build_ground():
     img = _image("streets", street_texture())
-    mat = emissive_material("Streets", img, 0.55, base=(0.006, 0.008, 0.018, 1.0))
+    mat = emissive_material("Streets", img, 0.42, base=(0.006, 0.008, 0.018, 1.0))
     x0, x1, z0, z1 = -3500.0, 3500.0, 220.0, -3800.0
     quad = [(x0, 0, z0), (x1, 0, z0), (x1, 0, z1), (x0, 0, z1)]
     # Counter-clockwise seen from above: Godot (x0,z0) -> (x1,z0) -> (x1,z1) is
@@ -272,7 +274,7 @@ def _box_faces(cx, cz, w, d, h, y0, yaw, rng):
 def build_city():
     rng = np.random.default_rng(42)
     pts = L.river_points()
-    mat = emissive_material("Windows", _image("windows", window_atlas()), 1.6)
+    mat = emissive_material("Windows", _image("windows", window_atlas()), 1.35)
 
     spacing = 26.0
     yaw = math.radians(14.0)
@@ -367,7 +369,7 @@ def _offset_line(pts, distance):
 
 def build_roads():
     pts = L.river_points()
-    mat = emissive_material("RoadLights", _image("trails", road_texture()), 1.7, base=(0.01, 0.012, 0.02, 1.0))
+    mat = emissive_material("RoadLights", _image("trails", road_texture()), 1.5, base=(0.01, 0.012, 0.02, 1.0))
     objs = []
     width = L.ROAD_WIDTH / 2
     for side in (1, -1):
@@ -405,39 +407,93 @@ def _slab(centre, size, material, parts):
 
 def build_bridge():
     """A single-pylon cable-stayed bridge. Local axes (Blender): X along the deck,
-    Y across it, Z up; the deck's centre is the origin at ground level."""
-    gold = glow_material("BridgeGold", (1.0, 0.5, 0.1, 1.0), 1.5)
-    cable = glow_material("BridgeCable", (1.0, 0.55, 0.14, 1.0), 1.3)
-    dark = plain_material("BridgeDeck", (0.02, 0.022, 0.03, 1.0), 0.5)
+    Y across it, Z up; the deck's centre is the origin at ground level.
+
+    Built to read the way the painting's bridge does from 300 m up: a *dark* steel
+    structure picked out by points and lines of light — lamp posts, a dotted string
+    along each fascia, thin amber cables — with only the pylon floodlit. The glows
+    are deliberately low (well under 1): the set has no tonemapper, so anything
+    brighter clips to a flat pale yellow and a whole cable fan merges into one
+    sheet."""
+    steel = plain_material("BridgeSteel", (0.03, 0.03, 0.035, 1.0), 0.45)
+    dark_base = (0.03, 0.025, 0.02, 1.0)
+    pylon = glow_material("BridgePylon", (0.85, 0.42, 0.08, 1.0), 0.55, base=dark_base)
+    cable = glow_material("BridgeCable", (0.95, 0.6, 0.22, 1.0), 0.45, base=dark_base)
+    arch = glow_material("BridgeArch", (0.7, 0.34, 0.08, 1.0), 0.22, base=dark_base)
+    rail = glow_material("BridgeRail", (1.0, 0.55, 0.16, 1.0), 0.5, base=dark_base)
+    lamp = glow_material("BridgeLamp", (1.0, 0.84, 0.55, 1.0), 2.2)
+    uplight = glow_material("BridgeUplight", (1.0, 0.6, 0.25, 1.0), 0.6, base=dark_base)
+    beacon = glow_material("BridgeBeacon", (1.0, 0.08, 0.05, 1.0), 3.0)
     parts = []
     Lb = L.BRIDGE_LENGTH
     H = L.BRIDGE_DECK_HEIGHT
     deck_w = 22.0
-    # deck, with a lit edge line down each side
-    _slab((0, 0, H), (Lb, deck_w, 2.4), dark, parts)
+    # The road surface sits at H + 0.4, just under `build_roads`' approach ribbon
+    # (H + 0.6), so the bridge carries the same light-trail traffic as its banks.
+    top_of_deck = H + 0.4
+
+    # -- deck: a slab over a narrower box girder, a parapet down each edge with a
+    # thin lit rail on top, and a string of fascia lights along the outside.
+    _slab((0, 0, top_of_deck - 1.0), (Lb, deck_w, 2.0), steel, parts)
+    _slab((0, 0, top_of_deck - 2.8), (Lb, deck_w * 0.6, 1.8), steel, parts)
     for side in (-1, 1):
-        _slab((0, side * (deck_w / 2 + 0.2), H + 1.4), (Lb, 0.5, 0.5), gold, parts)
-        _slab((0, side * (deck_w / 2), H + 0.3), (Lb, 0.5, 0.5), gold, parts)
-    # piers under the deck, so it does not float
-    for x in np.linspace(-Lb * 0.45, Lb * 0.45, 7):
-        _slab((x, 0, H / 2 - 0.5), (3.2, 5.0, H - 1.0), dark, parts)
-    # the pylon: two legs leaning together, with cross beams, offset toward one bank
+        y_edge = side * (deck_w / 2 - 0.2)
+        _slab((0, y_edge, top_of_deck + 0.55), (Lb, 0.4, 1.1), steel, parts)
+        _slab((0, y_edge, top_of_deck + 1.2), (Lb, 0.3, 0.2), rail, parts)
+        for x in np.arange(-Lb / 2 + 2.0, Lb / 2 - 1.0, 4.0):
+            _slab((x, side * (deck_w / 2 + 0.05), top_of_deck - 1.4), (0.5, 0.3, 0.5), lamp, parts)
+        # lamp posts, staggered between the two sides, arms over the road
+        for x in np.arange(-Lb / 2 + 5.0 + (side + 1) * 2.5, Lb / 2 - 2.0, 10.0):
+            y_post = side * (deck_w / 2 - 1.2)
+            _bar((x, y_post, top_of_deck), (x, y_post, top_of_deck + 7.5), 0.16, steel, parts, 6)
+            _bar((x, y_post, top_of_deck + 7.5), (x, y_post - side * 1.8, top_of_deck + 7.8), 0.12, steel, parts, 6)
+            _slab((x, y_post - side * 1.9, top_of_deck + 7.6), (1.0, 0.55, 0.3), lamp, parts)
+
+    # -- the pylon: an inverted Y, legs straddling the deck from the riverbed and
+    # meeting in a single mast that carries the cables, with a portal beam under
+    # the deck and a red aviation light on top. Toward one bank, as in the painting.
     px = -Lb * 0.12
-    top = 100.0
+    meet, top = H + 46.0, 112.0
+    leg_foot = deck_w / 2 + 2.0
     for side in (-1, 1):
-        _bar((px, side * 8.5, H), (px, side * 1.2, top), 1.9, gold, parts, 10)
-    for z, w in ((H + 24, 7.0), (H + 52, 4.4)):
-        _slab((px, 0, z), (2.0, w * 2 + 0.6, 1.6), gold, parts)
-    # the cable fans: from the pylon's upper part down to the deck, both sides
-    n = 11
+        _slab((px, side * leg_foot, 2.0), (6.0, 5.0, 4.0), steel, parts)
+        _bar((px, side * leg_foot, 0.0), (px, side * 0.9, meet), 1.5, pylon, parts, 10)
+    _slab((px, 0, top_of_deck - 3.4), (3.0, leg_foot * 2 + 1.0, 2.0), pylon, parts)
+    _slab((px, 0, H + 30.0), (2.2, 9.0, 1.4), pylon, parts)
+    _bar((px, 0, meet - 3.0), (px, 0, top), 1.7, pylon, parts, 10)
+    _bar((px, 0, top), (px, 0, top + 9.0), 0.55, pylon, parts, 8)
+    _slab((px, 0, top + 9.6), (1.1, 1.1, 1.1), beacon, parts)
+
+    # -- piers, each two round columns on a cap beam with a ring of light at the
+    # waterline, and shallow arches springing between the piers and the pylon.
+    # The pylon gets columns too (its portal beam is their cap), so the arches
+    # beside it spring from something.
+    piers = [-Lb * 0.45, -Lb * 0.28, Lb * 0.05, Lb * 0.23, Lb * 0.41]
+    supports = sorted(piers + [px])
+    for x in supports:
+        for side in (-1, 1):
+            _bar((x, side * 6.0, 0.0), (x, side * 6.0, top_of_deck - 3.7), 1.4, steel, parts, 10)
+            _bar((x, side * 6.0, 1.3), (x, side * 6.0, 1.9), 1.55, uplight, parts, 10)
+        if x != px:
+            _slab((x, 0, top_of_deck - 4.2), (3.2, 16.0, 1.6), steel, parts)
+    for a, b in zip(supports, supports[1:]):
+        for side in (-1, 1):
+            spring, crown = H * 0.35, top_of_deck - 3.9
+            pts = [(a + (b - a) * t, side * 6.0, spring + (crown - spring) * math.sin(math.pi * t))
+                   for t in np.linspace(0.04, 0.96, 11)]
+            for p, q in zip(pts, pts[1:]):
+                _bar(p, q, 0.55, arch, parts, 6)
+
+    # -- the cable fans: from the mast down to the deck edges, one fan toward each
+    # end. Few and thin, so from the deck they read as separate lines of light.
+    n = 9
     for side in (-1, 1):
         for k in range(n):
             t = (k + 1) / n
-            z_top = top - 4 - k * 2.4
-            # toward each end of the bridge, longer on the far side
-            for sign, reach in ((-1, Lb * 0.42), (1, Lb * 0.36)):
-                x_deck = px + sign * (10 + t * reach)
-                _bar((px, side * 1.2, z_top), (x_deck, side * (deck_w / 2 - 0.5), H + 1.2), 0.7, cable, parts, 6)
+            z_top = top - 3.0 - k * 2.8
+            for sign, reach in ((-1, Lb * 0.36 - 12.0), (1, Lb * 0.42)):
+                x_deck = px + sign * (12.0 + t * reach)
+                _bar((px, side * 0.8, z_top), (x_deck, side * (deck_w / 2 - 0.4), top_of_deck + 1.0), 0.32, cable, parts, 6)
     obj = _join(parts, "EarthBridge")
     return obj
 

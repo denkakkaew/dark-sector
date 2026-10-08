@@ -63,10 +63,13 @@ def main():
         rid = resources.setdefault(glb, len(resources) + 1)
         nodes.append('[node name="%s" parent="." instance=ExtResource("%d")]' % (name, rid) + NL + "transform = %s" % xf + NL + extra)
 
-    # Terrain first, so it draws as the floor of everything.
+    # Terrain first, so it draws as the floor of everything. It is also what the
+    # ships fly over: the `flight_obstacle` group is what scripts/FlightFloor.gd
+    # measures, so the aliens climb over the ledges and boulders instead of
+    # through them. (The buildings are all beyond the flight zone.)
     for name, glb in (("Ground", "mars_ground"), ("Ledges", "mars_ledges"), ("Rocks", "mars_rocks")):
         rid = resources.setdefault(glb, len(resources) + 1)
-        nodes.append('[node name="%s" parent="." instance=ExtResource("%d")]' % (name, rid) + NL)
+        nodes.append('[node name="%s" parent="." groups=["flight_obstacle"] instance=ExtResource("%d")]' % (name, rid) + NL)
     for name, glb, x, z, yaw, size in L.BUILDINGS:
         node(name, glb, transform(x, 0.0, z, yaw, size / EXPORTED[glb]))
     for i, (x, z, yaw, size) in enumerate(L.DRONES):

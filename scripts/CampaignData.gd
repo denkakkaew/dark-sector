@@ -340,9 +340,9 @@ const SCENES: Array = [
 		# the only scene where losing has an address.
 		"look": {
 			"space": Color(0.01, 0.01, 0.03),
-			"ambient": Color(0.2, 0.07, 0.09),
-			"sun": {"color": Color(1, 0.94, 0.92), "energy": 0.3},
-			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.5},
+			"ambient": Color(0.12, 0.04, 0.055),
+			"sun": {"color": Color(1, 0.94, 0.92), "energy": 0.25},
+			"fill": {"color": Color(1, 0.34, 0.32), "energy": 0.42},
 			# The painted night sky is all that is left of the photograph. The city
 			# below it — street grid, ~2,500 lit buildings, river, light-trail roads,
 			# a golden bridge and the landmark towers — is a real 3D set, hung 120 m
@@ -352,14 +352,18 @@ const SCENES: Array = [
 			"photo": {
 				"visible": true,
 				"texture": "res://assets/backdrop/sky_earth_night.png",
-				"tint": Color(0.95, 0.88, 0.9),
+				"tint": Color(0.68, 0.64, 0.74),
 				"distance": 3000.0,
 			},
 			"set": "res://scenes/sets/EarthSet.tscn",
-			# Night haze: the far city fades into a blue glow at the horizon.
-			"fog": {"color": Color(0.13, 0.15, 0.33), "density": 0.0012},
+			# Night haze: the far city fades into a deep blue at the horizon. Kept
+			# dark — a brighter haze washes every wall in the city purple-grey, and
+			# the scene should read as lit windows on black.
+			"fog": {"color": Color(0.05, 0.06, 0.15), "density": 0.0012},
 			"bodies": [],
-			"stars": 0.0,
+			# A star field over the painted sky's own faint ones. SceneLook hangs it
+			# just in front of the sky, so the city still stands in front of it.
+			"stars": 1.0,
 		},
 		"wave": {
 			"count": 26,

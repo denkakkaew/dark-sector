@@ -187,6 +187,8 @@ func _spawn_alien(ore_carrier: bool = false) -> void:
 		alien.score_value = CampaignData.ORE_CARRIER["score"]
 		alien.hit_points = CampaignData.ORE_CARRIER["hit_points"]
 	alien.flight_mode = mode
+	# The rock this scene's set puts under the flight zone, to climb over.
+	alien.flight_floor = _scene_look.flight_floor
 
 	var spawn := Vector3.ZERO
 	var target := Vector3.ZERO

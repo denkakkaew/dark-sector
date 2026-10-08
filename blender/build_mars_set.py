@@ -152,53 +152,117 @@ def build_ground():
 LEDGE_TONES = [(1.05, 0.8, 0.62), (0.9, 0.52, 0.36), (0.6, 0.4, 0.32), (1.0, 0.72, 0.52)]
 
 
+# Sand settled on the flat tops of the strata: paler and dustier than the walls.
+LEDGE_CAP_TONE = (1.05, 0.7, 0.5)
+LEDGE_SIDES = 32
+# How far every stratum reaches below the outcrop's base (in units of its height),
+# so it is buried on a slope instead of standing on a point.
+LEDGE_ROOT = 0.25
+
+
 def _ledge_template(rng, name):
-    """A layered sandstone outcrop: three to five flat slabs stacked and each a
-    little smaller and off-centre from the one below, so the side reads as strata
-    with a ledge at every layer. Heights are in units of 1; the placement scales
-    the whole thing to its radius and height."""
+    """A layered sandstone outcrop: one solid, stepped mass.
+
+    Each stratum is a steep-walled prism with a flat top, and every one of them
+    runs from below the ground up to its own top, each a little narrower than the
+    one before. So the upper layers stand *inside* the lower ones and the outcrop
+    is solid all the way down: what reads as strata is the step at each top, a
+    small overhanging lip under it, and the colour band of each layer — never a
+    gap. (The earlier version stacked separate rounded slabs, and the rounding
+    left a dark seam between every pair, so the rock looked like floating plates.)
+
+    Heights are in units of 1; the placement scales the whole thing to its radius
+    and height."""
     layers = int(rng.integers(3, 6))
     mesh = bpy.data.meshes.new(name)
     bm = bmesh.new()
-    nz = M.ValueNoise(int(rng.integers(0, 10 ** 6)), 64)
     color_layer = bm.verts.layers.float_color.new("Col")
     thickness = 1.0 / layers
+    sides = LEDGE_SIDES
+    angles = np.linspace(0.0, math.tau, sides, endpoint=False)
     ox = oy = 0.0
     for i in range(layers):
-        slab = bmesh.new()
-        bmesh.ops.create_icosphere(slab, subdivisions=2, radius=1.0)
-        radius = 1.0 - 0.17 * i + rng.uniform(-0.05, 0.05)
-        sx, sy = rng.uniform(0.9, 1.2), rng.uniform(0.85, 1.15)
+        # An irregular outline: a few low-frequency waves round the circle.
+        # Uneven enough that the steps are wide on one side and nearly flush on
+        # another, which is what keeps a stack of strata from reading as a cake.
+        wobble = np.zeros(sides)
+        for freq, amp in ((2, 0.12), (3, 0.09), (5, 0.06), (8, 0.03)):
+            wobble += rng.uniform(0.4, 1.0) * amp * np.sin(freq * angles + rng.uniform(0, math.tau))
+        radius = (1.0 - 0.15 * i + rng.uniform(-0.04, 0.04)) * (1.0 + wobble)
+        sx, sy = rng.uniform(0.85, 1.2), rng.uniform(0.8, 1.1)
+        top = (i + 1) * thickness * rng.uniform(0.94, 1.0) if i < layers - 1 else 1.0
         tone = LEDGE_TONES[(i + int(rng.integers(0, 4))) % len(LEDGE_TONES)]
-        for v in slab.verts:
-            p = v.co
-            n = 0.6 * nz(np.array(p.x * 2.0 + i * 7), np.array(p.y * 2.0 + 3)) + 0.4 * nz(np.array(p.x * 5.0 + i), np.array(p.y * 5.0 + 9))
-            k = (0.82 + 0.4 * float(n)) * radius
-            # A slab: a flat-topped, steep-sided disc, not a ball.
-            side = 1.0 if abs(p.z) < 0.55 else 0.86
-            z = max(min(p.z, 0.75), -0.75)
-            v.co = Vector((ox + p.x * k * sx * side, oy + p.y * k * sy * side, i * thickness + (z * 0.5 + 0.5) * thickness * 0.98))
-        new_verts = {}
-        for v in slab.verts:
-            new_verts[v] = bm.verts.new(v.co)
-        for f in slab.faces:
-            bm.faces.new([new_verts[v] for v in f.verts])
         shade = rng.uniform(0.88, 1.08)
-        for v in new_verts.values():
+        # Wall rings, bottom to top: (height, radius scale, colour scale). The
+        # bottom is darker (dust and shade), and the lip at the top overhangs.
+        rings = [
+            (-LEDGE_ROOT, 0.97, 0.7),
+            (top - thickness * 0.8, 0.95, 0.85),
+            (top - thickness * 0.18, 0.97, 1.0),
+            (top - thickness * 0.06, 1.01, 1.05),
+        ]
+        ring_verts = []
+        for h, k, c in rings:
+            jitter = rng.uniform(-0.02, 0.02, sides)
+            ring = []
+            for a, r, j in zip(angles, radius, jitter):
+                v = bm.verts.new((ox + math.cos(a) * r * (k + j) * sx, oy + math.sin(a) * r * (k + j) * sy, h))
+                v[color_layer] = (tone[0] * shade * c, tone[1] * shade * c, tone[2] * shade * c, 1.0)
+                ring.append(v)
+            ring_verts.append(ring)
+        for lower, upper in zip(ring_verts, ring_verts[1:]):
+            for s in range(sides):
+                bm.faces.new((lower[s], lower[(s + 1) % sides], upper[(s + 1) % sides], upper[s]))
+        # The flat top, on its own vertices so it shades flat and the walls don't
+        # average their normals into it. A small bevel ring rounds the edge.
+        lip = ring_verts[-1]
+        bevel, cap = [], []
+        for s, a in enumerate(angles):
+            p = lip[s].co
+            bevel.append(bm.verts.new((p.x, p.y, p.z)))
+            cap.append(bm.verts.new((ox + (p.x - ox) * 0.95, oy + (p.y - oy) * 0.95, top)))
+        centre = bm.verts.new((ox, oy, top))
+        for v in bevel:
             v[color_layer] = (tone[0] * shade, tone[1] * shade, tone[2] * shade, 1.0)
-        slab.free()
-        ox += rng.uniform(-0.12, 0.12)
-        oy += rng.uniform(-0.12, 0.12)
+        for v in cap + [centre]:
+            v[color_layer] = (*(t * shade for t in LEDGE_CAP_TONE), 1.0)
+        for s in range(sides):
+            n = (s + 1) % sides
+            bm.faces.new((bevel[s], bevel[n], cap[n], cap[s]))
+            bm.faces.new((cap[s], cap[n], centre))
+        # The next stratum up shifts a little, never far enough to leave its
+        # own footprint hanging out over nothing.
+        ox += rng.uniform(-0.09, 0.09)
+        oy += rng.uniform(-0.09, 0.09)
+    # Every face above is wound to face outward (walls) or up (tops), so there is
+    # no normal recalculation: on a loose disc like a top it can pick either side.
     bm.to_mesh(mesh)
     bm.free()
     for poly in mesh.polygons:
-        poly.use_smooth = True
+        # Walls smooth (worn sandstone), tops flat.
+        poly.use_smooth = abs(poly.normal.z) < 0.6
     return mesh
+
+
+def _skip_old_template_draws(rng):
+    """Advance `rng` past what the first (stacked-slab) ledge templates drew from
+    it, so the scatter below lands every ledge exactly where it has always been —
+    that layout was judged by eye (none in front of the colony). The templates
+    now draw from their own generator, so changing their shape can never move a
+    ledge again."""
+    for _ in range(5):
+        layers = int(rng.integers(3, 6))
+        rng.integers(0, 10 ** 6)
+        for _ in range(layers):
+            rng.uniform(), rng.uniform(), rng.uniform(), rng.integers(0, 4)
+            rng.uniform(), rng.uniform(), rng.uniform()
 
 
 def build_ledges(noises):
     rng = np.random.default_rng(31)
-    templates = [_ledge_template(rng, "ledge%d" % i) for i in range(5)]
+    _skip_old_template_draws(rng)
+    shapes = np.random.default_rng(131)
+    templates = [_ledge_template(shapes, "ledge%d" % i) for i in range(5)]
     image = M._make_image("sand_ledge", M._regolith_texture(512, 8, SAND_BASE, SAND_TINT, SAND_CONTRAST))
     mat = M._ground_material(image)
 

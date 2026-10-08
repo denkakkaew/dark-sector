@@ -1,10 +1,11 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 ; Written by blender/make_moon_set_scene.py from blender/moon_layout.py — move
 ; things in the layout, or by hand here (a re-run rewrites this file).
 ; The Moon's alien forward base, ground and horizon, in front of the sky plate
 ; SceneLook hangs far behind it. Everything stays beyond the alien spawn ring
-; or below the flight lanes, so no ship flies through a building.
+; or below the flight lanes, so no ship flies through a building. The drones
+; are Mars' model and script (scripts/Worker.gd), working the landers and tanks.
 
 [ext_resource type="PackedScene" path="res://assets/object/moon/moon_terrain.glb" id="1"]
 [ext_resource type="PackedScene" path="res://assets/object/moon/moon_rocks.glb" id="2"]
@@ -15,6 +16,8 @@
 [ext_resource type="PackedScene" path="res://assets/object/moon/moon_alien_tanks.glb" id="7"]
 [ext_resource type="PackedScene" path="res://assets/object/moon/moon_pad.glb" id="8"]
 [ext_resource type="PackedScene" path="res://assets/object/moon/moon_alien_lander.glb" id="9"]
+[ext_resource type="PackedScene" path="res://assets/object/mars/mars_alien_drone.glb" id="10"]
+[ext_resource type="Script" path="res://scripts/Worker.gd" id="11"]
 
 [node name="MoonSet" type="Node3D"]
 
@@ -62,3 +65,57 @@ transform = Transform3D(0.9397, 0, 0.342, 0, 1, 0, -0.342, 0, 0.9397, -16, 0, -6
 
 [node name="LanderB" parent="." instance=ExtResource("9")]
 transform = Transform3D(0.9962, 0, -0.0872, 0, 1, 0, 0.0872, 0, 0.9962, -16, 0.3, -66)
+
+[node name="Drone1" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.4722, 0, -0.8179, 0, 0.9444, 0, 0.8179, 0, -0.4722, -5, 0, -50)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 211
+bounce = 3
+ground = NodePath("../Terrain")
+
+[node name="Drone2" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.866, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866, 9.5, 0, -47.5)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 228
+bounce = 3
+ground = NodePath("../Terrain")
+
+[node name="Drone3" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.4583, 0, 0.7939, 0, 0.9167, 0, -0.7939, 0, -0.4583, -9, 0, -60)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 245
+bounce = 3
+ground = NodePath("../Terrain")
+
+[node name="Drone4" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.7448, 0, -0.6249, 0, 0.9722, 0, 0.6249, 0, -0.7448, -23.5, 0, -60)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 262
+bounce = 3
+ground = NodePath("../Terrain")
+
+[node name="Drone5" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.164, 0, -0.9301, 0, 0.9444, 0, 0.9301, 0, -0.164, 1, 0, -67)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 279
+bounce = 3
+ground = NodePath("../Terrain")
+
+[node name="Drone6" parent="." node_paths=PackedStringArray("ground") instance=ExtResource("10")]
+transform = Transform3D(-0.9136, 0, -0.3325, 0, 0.9722, 0, 0.3325, 0, -0.9136, 19, 0, -50)
+script = ExtResource("11")
+roam_radius = 2.5
+walk_speed = 0.8
+seed_value = 296
+bounce = 3
+ground = NodePath("../Terrain")

@@ -82,6 +82,39 @@ func _ready() -> void:
 		Engine.time_scale = 1.0
 		get_tree().quit()
 		return
+	if args.size() > 2 and args[2] == "crew":
+		# The Moon base's drones, close, a numbered frame every 0.4 s — to watch them
+		# walk, hop and work.
+		game.set("_to_spawn", 0)
+		var crew_cam: Camera3D = game.get_node("Camera3D")
+		crew_cam.global_position = Vector3(-4.0, 5.0, -32.0)
+		crew_cam.look_at(Vector3(-6.0, 0.5, -56.0), Vector3.UP)
+		crew_cam.fov = 50.0
+		for n in 6:
+			for i in 24:
+				await get_tree().process_frame
+			get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_%d.png" % n)))
+		get_tree().quit()
+		return
+	if args.size() > 2 and args[2] == "climb":
+		# Mars: side on to the big left-corner ledge, one ship flown straight at it,
+		# a numbered frame every fifth of a second — to watch it climb over the rock.
+		game.set("_to_spawn", 0)
+		var climb_cam: Camera3D = game.get_node("Camera3D")
+		climb_cam.global_position = Vector3(4.0, 3.0, -2.0)
+		climb_cam.look_at(Vector3(-15.5, 2.0, -2.0), Vector3.UP)
+		climb_cam.fov = 55.0
+		var ship: Area3D = ALIEN_SCENE.instantiate()
+		ship.flight_floor = game.get_node("SceneLook").flight_floor
+		game.add_child(ship)
+		ship.global_position = Vector3(-15.5, 1.0, -14.0)
+		ship.velocity = Vector3(0.0, 0.0, 8.0)
+		for n in 10:
+			for i in 12:
+				await get_tree().physics_frame
+			get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_%d.png" % n)))
+		get_tree().quit()
+		return
 	if args.size() > 2 and args[2] == "play":
 		# The real wave, untouched: a numbered frame every half second.
 		for n in 6:
@@ -96,6 +129,12 @@ func _ready() -> void:
 		if module != null:
 			module.position.x = -18.0
 			module.velocity = Vector3.ZERO
+	if args.size() > 3 and args[3] == "bridge":
+		# Earth's bridge from a few hundred metres, to judge its lights and detail.
+		var bridge_cam: Camera3D = game.get_node("Camera3D")
+		bridge_cam.global_position = Vector3(10.0, -55.0, -110.0)
+		bridge_cam.look_at(Vector3(80.0, -100.0, -232.0), Vector3.UP)
+		bridge_cam.fov = 45.0
 	if args.size() > 3 and args[3] == "side":
 		# Level with the ships and close, so a hull flown across the view is seen
 		# in profile, large enough to tell nose from tail.
