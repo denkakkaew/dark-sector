@@ -43,6 +43,8 @@ var _camera_rest: Transform3D
 var _spawn_interval: float = 1.5
 var _alien_speed: float = 8.0
 var _mode_weights: Array = []
+## Fraction of this wave's scouts that charge a shock at the turret.
+var _shock_chance: float = 0.0
 ## Aliens still to spawn. The scene is cleared when this and `_alive` are both 0.
 var _to_spawn: int = 0
 ## Aliens in the air: spawned, not yet shot down and not yet through.
@@ -73,6 +75,7 @@ func _load_wave(scene_index: int) -> void:
 	_spawn_interval = wave["interval"]
 	_alien_speed = wave["speed"]
 	_mode_weights = wave["mode_weights"]
+	_shock_chance = wave["shock_chance"]
 	_to_spawn = wave["count"]
 	_spawn_plan = CampaignData.spawn_plan(scene_index)
 	_alive = 0
@@ -98,6 +101,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_update_aim()
 	_reticle.reticle_pos = _reticle_screen_pos
+	_reticle.jammed = _turret.is_stunned()
 	# Held rather than tapped: a wave is twenty-odd ships and asking an 8-year-old
 	# to tap once per shot turns the game into a tapping contest. `try_fire()`
 	# enforces the cooldown, so holding down is a rate limit, not a cheat.
@@ -189,6 +193,10 @@ func _spawn_alien(ore_carrier: bool = false) -> void:
 	alien.flight_mode = mode
 	# The rock this scene's set puts under the flight zone, to climb over.
 	alien.flight_floor = _scene_look.flight_floor
+	# Rolled here, per ship, against the scene's table. Carriers never shock:
+	# they are freighters, and already the slowest, biggest target on the field.
+	alien.shock_target = _turret.shock_point()
+	alien.can_shock = not ore_carrier and randf() < _shock_chance
 
 	var spawn := Vector3.ZERO
 	var target := Vector3.ZERO
@@ -247,6 +255,7 @@ func _spawn_alien(ore_carrier: bool = false) -> void:
 	alien.velocity = (target - spawn).normalized() * speed
 	alien.destroyed.connect(_on_alien_destroyed)
 	alien.got_through.connect(_on_alien_got_through)
+	alien.shocked_turret.connect(_on_turret_shocked)
 	_alive += 1
 
 # The score itself is GameState's business; the popup needs the kill position,
@@ -265,6 +274,13 @@ func _on_alien_got_through() -> void:
 	# ended must not then be reported as a scene cleared.
 	GameState.take_damage()
 	_resolve_alien()
+
+## A shocker's bolt landed: jam the gun and take a bite out of the bar. The ship
+## is not resolved — it flies on, and can still be shot down or get through.
+## The camera knock and the red edge come with the damage, as for a leak.
+func _on_turret_shocked() -> void:
+	_turret.stun(CampaignData.SHOCK["stun_time"])
+	GameState.take_damage(CampaignData.SHOCK["damage"])
 
 func _resolve_alien() -> void:
 	_alive -= 1

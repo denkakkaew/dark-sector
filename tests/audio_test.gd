@@ -21,6 +21,8 @@ const SOUNDS_IN_USE: PackedStringArray = [
 	"armour_hit",       # AlienShip._show_armour_damage
 	"alien_explode",    # AlienShip._explode
 	"carrier_explode",  # AlienShip._explode, armoured
+	"shock_charge",     # AlienShip._start_charge
+	"shock_zap",        # AlienShip._discharge
 	"leak",             # HUD._on_damage_taken
 	"game_over",        # HUD._on_game_over
 	"scene_cleared",    # HUD._on_scene_cleared

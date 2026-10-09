@@ -36,6 +36,9 @@ const MODE_SWOOP: int = 3
 ##   the later modes at 0.
 ## - `ore_carriers` — Mars' slow armoured carriers. Phase 6 implements them;
 ##   the number they should spawn is recorded here now.
+## - `shock_chance` — fraction of the scouts that, flying close past the turret,
+##   stop to charge an electric shock at it (see `SHOCK`). Rises scene by scene
+##   like everything else here. Carriers never shock: they are freighters.
 ## - `time_limit` — seconds before the scene ends on its own. A safety valve,
 ##   not the main pressure: a wave flies itself out in well under this, so a
 ##   scene normally ends by being cleared. It exists so an idle kiosk can never
@@ -141,6 +144,7 @@ const SCENES: Array = [
 			"speed": 7.0,
 			"mode_weights": [0.85, 0.15, 0.0, 0.0],
 			"ore_carriers": 0,
+			"shock_chance": 0.2,
 			"time_limit": 60.0,
 		},
 	},
@@ -215,6 +219,7 @@ const SCENES: Array = [
 			"speed": 8.5,
 			"mode_weights": [0.5, 0.5, 0.0, 0.0],
 			"ore_carriers": 0,
+			"shock_chance": 0.3,
 			"time_limit": 60.0,
 		},
 	},
@@ -293,6 +298,7 @@ const SCENES: Array = [
 			"speed": 9.5,
 			"mode_weights": [0.3, 0.25, 0.45, 0.0],
 			"ore_carriers": 3,
+			"shock_chance": 0.35,
 			"time_limit": 60.0,
 		},
 	},
@@ -371,6 +377,7 @@ const SCENES: Array = [
 			"speed": 11.0,
 			"mode_weights": [0.25, 0.25, 0.25, 0.25],
 			"ore_carriers": 0,
+			"shock_chance": 0.45,
 			"time_limit": 60.0,
 		},
 	},
@@ -389,6 +396,26 @@ const ORE_CARRIER := {
 	"score": 400,
 	"speed_scale": 0.55,
 	"size": 1.7,
+}
+
+## The scouts' electric shock, the one way an alien hurts the turret itself
+## rather than the thing it is defending. A shocker that flies within `range` of
+## the gun slows to `charge_pace` and crackles for `charge_time` — big, bright,
+## close and nearly still, the easiest shot it will ever offer — and if it is
+## still alive at the end it discharges: the turret is jammed for `stun_time`
+## and the bar loses `damage`.
+##
+## Damage is a fraction of a leak's on purpose. The jam is the real cost — a
+## second of not shooting while the wave keeps coming — and a shock that
+## drained as much as a leak would make the ships that *stay away* the safe
+## ones, which is backwards for a game about stopping them getting through.
+const SHOCK := {
+	"range": 9.0,
+	"charge_time": 1.0,
+	"charge_pace": 0.25,
+	"stun_time": 1.2,
+	"damage": 8.0,
+	"bolt_time": 0.35,
 }
 
 ## Spawns at the head of a wave that are never carriers, so a scene opens on the

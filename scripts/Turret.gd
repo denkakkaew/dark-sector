@@ -6,12 +6,57 @@ const LASER_SCENE := preload("res://scenes/Laser.tscn")
 @export var laser_speed: float = 60.0
 @export var aim_assist_angle: float = 35.0
 
+## How far the jammed barrel shakes, in degrees either way.
+const STUN_JITTER_DEG: float = 3.0
+
 @onready var _aim_pivot: Node3D = $AimPivot
+@onready var _shock_sparks: CPUParticles3D = $AimPivot/ShockSparks
+@onready var _shock_light: OmniLight3D = $AimPivot/ShockLight
 
 var _fire_cooldown_remaining: float = 0.0
+## Seconds the gun stays jammed after an alien's shock; 0 is working.
+var _stun_remaining: float = 0.0
 
 func _process(delta: float) -> void:
 	_fire_cooldown_remaining = maxf(_fire_cooldown_remaining - delta, 0.0)
+	if _stun_remaining > 0.0:
+		_stun_remaining = maxf(_stun_remaining - delta, 0.0)
+		if _stun_remaining <= 0.0:
+			_recover()
+		else:
+			_shudder()
+
+
+## Jam the gun for `seconds`: an alien's shock landed. A second shock while
+## already jammed extends the jam to whichever ends later rather than stacking,
+## so two shockers arriving together cost a jam, not a lockout.
+func stun(seconds: float) -> void:
+	_stun_remaining = maxf(_stun_remaining, seconds)
+	_shock_sparks.emitting = true
+	_shock_light.visible = true
+
+
+func is_stunned() -> bool:
+	return _stun_remaining > 0.0
+
+
+## Where an alien's shock lands: the gun on its trunnion.
+func shock_point() -> Node3D:
+	return _aim_pivot
+
+
+func _shudder() -> void:
+	# Layered on top of this frame's aim, which Game re-applies every frame
+	# before this runs (parent first), so the shake never accumulates.
+	var jitter := deg_to_rad(STUN_JITTER_DEG)
+	_aim_pivot.rotate_object_local(Vector3.RIGHT, randf_range(-jitter, jitter))
+	_aim_pivot.rotate_object_local(Vector3.UP, randf_range(-jitter, jitter))
+	_shock_light.light_energy = randf_range(0.5, 3.5)
+
+
+func _recover() -> void:
+	_shock_sparks.emitting = false
+	_shock_light.visible = false
 
 func aim_at(world_pos: Vector3) -> void:
 	var target := _clamp_to_horizon(world_pos)
@@ -33,7 +78,7 @@ func _clamp_to_horizon(world_pos: Vector3) -> Vector3:
 	return target
 
 func try_fire() -> void:
-	if _fire_cooldown_remaining > 0.0:
+	if _fire_cooldown_remaining > 0.0 or is_stunned():
 		return
 	_fire_cooldown_remaining = fire_cooldown
 	# Jittered, because at a 0.2 s cooldown this is five identical samples a

@@ -37,6 +37,11 @@ MUSIC_DIR = os.path.join(REPO, "assets", "audio", "music")
 # Seeded so the noise beds come out the same on every run — an unseeded
 # generator would rewrite every explosion in the repo each time this is touched.
 RNG = random.Random(20260804)
+# The shock sounds came after the rest of the set and draw their noise from their
+# own generator. The shared one is consumed in name order, so feeding them from it
+# would shift every noise burst in the files that sort after them (ui_*, victory,
+# the battle bed) and rewrite all of those for no audible reason.
+SHOCK_RNG = random.Random(20261010)
 
 
 # --------------------------------------------------------------------------
@@ -75,9 +80,10 @@ def osc(duration, f0, f1=None, shape="sine"):
     return out
 
 
-def noise(duration):
+def noise(duration, rng=None):
+    rng = RNG if rng is None else rng
     count = max(1, int(duration * SAMPLE_RATE))
-    return [RNG.uniform(-1.0, 1.0) for _ in range(count)]
+    return [rng.uniform(-1.0, 1.0) for _ in range(count)]
 
 
 def envelope(buf, attack=0.004, release=None, power=2.5):
@@ -241,6 +247,45 @@ def sfx_leak():
     place(canvas, first, 0.0, 0.55)
     place(canvas, second, 0.2, 0.6)
     return canvas
+
+
+def crackle(duration, rate, rng):
+    """Sparse random snaps of noise, `rate` per second on average — the dry
+    crackle of a discharge, which a steady buzz on its own never sounds like."""
+    canvas = [0.0] * int(duration * SAMPLE_RATE)
+    at = 0.0
+    while at < duration:
+        snap = envelope(noise(rng.uniform(0.003, 0.012), rng), attack=0.0005, power=3.0)
+        place(canvas, snap, at, rng.uniform(0.4, 1.0))
+        at += rng.expovariate(rate)
+    return canvas
+
+
+def sfx_shock_charge():
+    """An alien charging a shock at the turret. A buzz that climbs in pitch and
+    swells in volume, so the ear hears 'something is about to happen' and has
+    most of a second to do something about it — the same second the ship spends
+    hovering, glowing, in front of the gun."""
+    duration = 0.9
+    buzz = lowpass(osc(duration, 70.0, 260.0, "saw"), 1800.0)
+    hum = lowpass(osc(duration, 140.0, 520.0, "square"), 1200.0)
+    body = mix(gain(buzz, 0.55), gain(hum, 0.2), gain(crackle(duration, 40.0, SHOCK_RNG), 0.5))
+    count = len(body)
+    fade = 0.03 * SAMPLE_RATE
+    for i in range(count):
+        body[i] *= (i / count) ** 1.4 * min(1.0, (count - i) / fade)
+    return body
+
+
+def sfx_shock_zap():
+    """The shock landing: a hard crack over a falling buzz. The turret is jammed
+    for a moment after it, so this should sound like it hurt — but electrical,
+    not explosive, or it reads as the turret blowing up."""
+    duration = 0.4
+    crack = sweep_lowpass(noise(duration, SHOCK_RNG), 9000.0, 900.0)
+    buzz = lowpass(osc(duration, 420.0, 60.0, "saw"), 2500.0)
+    snaps = crackle(duration, 60.0, SHOCK_RNG)
+    return envelope(mix(gain(crack, 0.8), gain(buzz, 0.6), gain(snaps, 0.5)), attack=0.001, power=2.0)
 
 
 def sfx_quiz_correct():
@@ -430,6 +475,8 @@ SFX = {
     "scene_cleared": sfx_scene_cleared,
     "victory": sfx_victory,
     "game_over": sfx_game_over,
+    "shock_charge": sfx_shock_charge,
+    "shock_zap": sfx_shock_zap,
 }
 
 MUSIC = {

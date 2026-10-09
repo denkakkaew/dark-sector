@@ -115,6 +115,25 @@ func _ready() -> void:
 			get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_%d.png" % n)))
 		get_tree().quit()
 		return
+	if args.size() > 2 and args[2] == "shock":
+		# One shocker flown at the turret from in front, a numbered frame every
+		# tenth of a second — to watch it close in, charge, and land the bolt.
+		game.set("_to_spawn", 0)
+		var turret: Node3D = game.get_node("Turret")
+		var shocker: Area3D = ALIEN_SCENE.instantiate()
+		shocker.shock_target = turret.shock_point()
+		shocker.can_shock = true
+		# What the spawner wires up, so the jam lands on the turret too.
+		shocker.shocked_turret.connect(game._on_turret_shocked)
+		game.add_child(shocker)
+		shocker.global_position = Vector3(-4.0, 3.0, -8.0)
+		shocker.velocity = (Vector3(0.0, 1.5, 7.0) - shocker.global_position).normalized() * 7.0
+		for n in 30:
+			for i in 6:
+				await get_tree().physics_frame
+			get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(out.replace(".png", "_%d.png" % n)))
+		get_tree().quit()
+		return
 	if args.size() > 2 and args[2] == "play":
 		# The real wave, untouched: a numbered frame every half second.
 		for n in 6:

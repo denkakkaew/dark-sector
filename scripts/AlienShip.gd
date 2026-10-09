@@ -7,6 +7,10 @@ signal destroyed(world_position: Vector3, points: int)
 # where it happens: in scenes 1–3 "getting through" is reaching the station, the
 # base site, or escaping with ore — only scene 4 is literally reaching Earth.
 signal got_through
+# Charged up close to the turret and hit it with an electric shock. The ship
+# draws the bolt itself; what the shock *does* — the jam, the energy — is the
+# spawner's to apply, the same split as `got_through`.
+signal shocked_turret
 
 const HIT_EFFECT_SCENE := preload("res://scenes/HitEffect.tscn")
 const EARTH_Z: float = 9.0
@@ -32,6 +36,27 @@ const HULLS: Array[PackedScene] = [
 ]
 
 enum FlightMode { DIRECT, STRAFE, WEAVE, SWOOP }
+enum ShockState { READY, CHARGING, SPENT }
+
+## The turret's gun, which a shocker charges at once it flies within
+## `CampaignData.SHOCK.range` of it — handed over by the spawner, like
+## `flight_floor`. A ship with `can_shock` false, or no target, never charges.
+var shock_target: Node3D
+var can_shock: bool = false
+## One shock per ship: ready, charging it now, or already spent.
+var shock_state: ShockState = ShockState.READY
+var _charge_left: float = 0.0
+var _charge_light: OmniLight3D
+var _charge_arc: ShockArc
+var _charge_orb: MeshInstance3D
+var _reach: float = 1.0
+## Charge glow at its brightest, as the shock is about to land.
+const CHARGE_LIGHT_ENERGY: float = 4.0
+const SHOCK_COLOR := Color(0.45, 0.75, 1.0)
+## The orb of charge gathering at the nose, as a fraction of the hull's reach:
+## its radius when fully charged, and how far ahead of the hull's centre it sits.
+const CHARGE_ORB_SIZE: float = 0.45
+const CHARGE_ORB_AHEAD: float = 0.8
 
 ## A hull this ship always wears, instead of drawing one from `HULLS`. The ore
 ## carrier sets it: it is its own ship, not a scout in armour.
@@ -160,6 +185,9 @@ func _physics_process(delta: float) -> void:
 	if _destroyed:
 		return
 	var previous := global_position
+	# A charging ship all but stops, so the flight below is run at its pace;
+	# the wobble clock keeps full time, so it still hovers rather than freezing.
+	var move_delta := delta * _update_shock(delta)
 	# Back down onto the course, so the flight mode moves the ship along it as
 	# if no rock were there; the lift goes back on top afterwards.
 	global_position.y -= _lift
@@ -173,25 +201,123 @@ func _physics_process(delta: float) -> void:
 	match flight_mode:
 		FlightMode.DIRECT:
 			if velocity == Vector3.ZERO:
-				global_position.z += speed * delta
+				global_position.z += speed * move_delta
 			else:
-				global_position += (velocity + wobble) * delta
+				global_position += (velocity + wobble) * move_delta
 		FlightMode.STRAFE:
-			global_position += (velocity + wobble) * delta
+			global_position += (velocity + wobble) * move_delta
 		FlightMode.WEAVE:
 			var lateral := Vector3(sin(_wobble_time * _weave_freq) * _weave_amp, 0.0, 0.0)
-			global_position += (velocity + wobble + lateral) * delta
+			global_position += (velocity + wobble + lateral) * move_delta
 		FlightMode.SWOOP:
 			var vertical := Vector3(0.0, sin(_wobble_time * _swoop_freq) * _swoop_amp, 0.0)
-			global_position += (velocity + wobble + vertical) * delta
+			global_position += (velocity + wobble + vertical) * move_delta
 			global_position.y = maxf(global_position.y, 0.3)
 	global_position.y += _clear_the_ground(global_position - on_course, delta)
 	# Steered off the step *including* the lift, so a ship climbing over rock
 	# noses up, and dips its nose coming down the far side.
-	_steer(global_position - previous, delta)
+	var heading := global_position - previous
+	# Charging, it turns to face the gun it is about to hit: a third tell beside
+	# the glow and the crackle, and the one that says *which* ship is doing it.
+	if shock_state == ShockState.CHARGING:
+		heading = shock_target.global_position - global_position
+	_steer(heading, delta)
 	if global_position.z >= EARTH_Z:
 		got_through.emit()
 		queue_free()
+
+func _update_shock(delta: float) -> float:
+	"""Run the shock: start charging when close enough, discharge when charged.
+
+	Returns the pace the ship flies at this frame — 1 normally, the charge pace
+	while it hovers in front of the gun.
+	"""
+	if not can_shock or not is_instance_valid(shock_target):
+		return 1.0
+	match shock_state:
+		ShockState.READY:
+			if global_position.distance_to(shock_target.global_position) <= CampaignData.SHOCK["range"]:
+				_start_charge()
+				return CampaignData.SHOCK["charge_pace"]
+		ShockState.CHARGING:
+			_charge_left -= delta
+			if _charge_left <= 0.0:
+				_discharge()
+				return 1.0
+			var progress := 1.0 - _charge_left / CampaignData.SHOCK["charge_time"]
+			# Brightening as it charges, and unsteady, so it reads as electricity
+			# building up rather than a lamp being turned on.
+			var flicker := randf_range(0.6, 1.0)
+			_charge_light.light_energy = CHARGE_LIGHT_ENERGY * progress * flicker
+			# The orb swells toward full size and sits at the nose, on the line to
+			# the gun, so the bolt visibly comes out of it.
+			var toward := (shock_target.global_position - global_position).normalized()
+			_charge_orb.global_position = global_position + toward * _reach * CHARGE_ORB_AHEAD
+			_charge_orb.scale = Vector3.ONE * maxf(0.05, progress * (0.8 + 0.2 * flicker))
+			return CampaignData.SHOCK["charge_pace"]
+	return 1.0
+
+
+func _start_charge() -> void:
+	shock_state = ShockState.CHARGING
+	_charge_left = CampaignData.SHOCK["charge_time"]
+	Audio.play("shock_charge", -2.0, 0.05)
+	var box := ($CollisionShape3D.shape as BoxShape3D).size
+	_reach = maxf(box.x, box.z) * 0.5 * scale.x
+	_charge_light = OmniLight3D.new()
+	_charge_light.light_color = SHOCK_COLOR
+	_charge_light.light_energy = 0.0
+	_charge_light.omni_range = _reach * 3.0
+	add_child(_charge_light)
+	_charge_orb = _make_charge_orb()
+	add_child(_charge_orb)
+	# Arcs crawling over the hull and well past it: at spawn distance a ship is
+	# a hand's width on screen, and sparks inside its silhouette would be lost.
+	_charge_arc = ShockArc.new()
+	_charge_arc.source = self
+	_charge_arc.crackle_radius = _reach * 1.6
+	_charge_arc.crackle_count = 5
+	_charge_arc.width = 0.06
+	add_child(_charge_arc)
+
+
+func _make_charge_orb() -> MeshInstance3D:
+	var orb := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = _reach * CHARGE_ORB_SIZE
+	sphere.height = sphere.radius * 2.0
+	sphere.radial_segments = 16
+	sphere.rings = 8
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	material.albedo_color = Color(SHOCK_COLOR, 0.85)
+	sphere.material = material
+	orb.mesh = sphere
+	orb.top_level = true
+	orb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	orb.scale = Vector3.ONE * 0.05
+	return orb
+
+
+func _discharge() -> void:
+	shock_state = ShockState.SPENT
+	_charge_light.queue_free()
+	_charge_orb.queue_free()
+	_charge_arc.queue_free()
+	# The bolt hangs off the field rather than the ship, so it finishes its
+	# flash even if the ship is shot down in the middle of it.
+	var bolt := ShockArc.new()
+	bolt.source = self
+	bolt.target = shock_target
+	bolt.lifetime = CampaignData.SHOCK["bolt_time"]
+	bolt.width = 0.1
+	bolt.flicker_interval = 0.04
+	get_parent().add_child(bolt)
+	Audio.play("shock_zap", 0.0, 0.05)
+	shocked_turret.emit()
+
 
 func _clear_the_ground(step: Vector3, delta: float) -> float:
 	"""How far above its course the ship flies this frame; it is on course now.
